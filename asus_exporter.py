@@ -15,7 +15,6 @@ from typing import Optional
 from aiohttp import web
 from asusrouter import AsusData, AsusRouter
 from prometheus_client import (
-    CONTENT_TYPE_LATEST,
     Counter,
     Gauge,
     Histogram,
@@ -579,7 +578,9 @@ class AsusExporter:
         """HTTP handler for Prometheus metrics endpoint"""
         try:
             data = generate_latest()
-            return web.Response(body=data, content_type=CONTENT_TYPE_LATEST)
+            return web.Response(
+                body=data, content_type="text/plain; version=0.0.4; charset=utf-8"
+            )
         except Exception as e:
             logger.error(f"Error generating metrics: {e}")
             return web.Response(text="Error generating metrics", status=500)
