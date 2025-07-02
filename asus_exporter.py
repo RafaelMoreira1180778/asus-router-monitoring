@@ -579,7 +579,8 @@ class AsusExporter:
         try:
             data = generate_latest()
             return web.Response(
-                body=data, content_type="text/plain; version=0.0.4; charset=utf-8"
+                body=data,
+                headers={"Content-Type": "text/plain; version=0.0.4; charset=utf-8"},
             )
         except Exception as e:
             logger.error(f"Error generating metrics: {e}")

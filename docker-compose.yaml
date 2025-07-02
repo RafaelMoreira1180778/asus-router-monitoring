@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # ASUS Router Prometheus Exporter
   asus-exporter:
