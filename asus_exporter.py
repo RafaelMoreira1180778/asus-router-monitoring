@@ -93,6 +93,32 @@ WIFI_CLIENTS_AUTHENTICATED = Gauge(
     "asus_wifi_clients_authenticated", "WiFi clients authenticated", ["band"]
 )
 
+# Client connection metrics
+CLIENT_COUNT_BY_TYPE = Gauge(
+    "asus_client_count_by_type", "Number of clients by connection type", ["type"]
+)
+CLIENT_ONLINE = Gauge(
+    "asus_client_online", "Client online status", ["mac", "name", "connection_type"]
+)
+CLIENT_RSSI = Gauge(
+    "asus_client_rssi_dbm", "Client RSSI in dBm", ["mac", "name", "band"]
+)
+CLIENT_TX_RATE = Gauge(
+    "asus_client_tx_rate_mbps",
+    "Client TX rate in Mbps",
+    ["mac", "name", "connection_type"],
+)
+CLIENT_RX_RATE = Gauge(
+    "asus_client_rx_rate_mbps",
+    "Client RX rate in Mbps",
+    ["mac", "name", "connection_type"],
+)
+CLIENT_INTERNET_STATE = Gauge(
+    "asus_client_internet_state",
+    "Client internet access state",
+    ["mac", "name", "connection_type"],
+)
+
 # Connection metrics
 CONNECTION_STATUS = Gauge(
     "asus_connection_status", "Router connection status (1=connected, 0=disconnected)"
@@ -134,6 +160,35 @@ LAST_COLLECTION_TIMESTAMP = Gauge(
 )
 COLLECTION_ERRORS_TOTAL = Counter(
     "asus_collection_errors_total", "Total collection errors", ["error_type"]
+)
+
+# Speedtest metrics
+SPEEDTEST_DOWNLOAD_MBPS = Gauge(
+    "asus_speedtest_download_mbps", "Speedtest download speed in Mbps"
+)
+SPEEDTEST_UPLOAD_MBPS = Gauge(
+    "asus_speedtest_upload_mbps", "Speedtest upload speed in Mbps"
+)
+SPEEDTEST_PING_MS = Gauge("asus_speedtest_ping_ms", "Speedtest ping in milliseconds")
+SPEEDTEST_TIMESTAMP = Gauge(
+    "asus_speedtest_timestamp_seconds", "Speedtest last run timestamp"
+)
+
+# Node information
+NODE_STATUS = Gauge(
+    "asus_node_status", "Node status information", ["node_mac", "attribute"]
+)
+
+# Enhanced port metrics
+PORT_MAX_RATE = Gauge(
+    "asus_port_max_rate_mbps",
+    "Port maximum rate in Mbps",
+    ["node_mac", "port_type", "port_id"],
+)
+PORT_CAPABILITIES = Gauge(
+    "asus_port_capabilities",
+    "Port capabilities",
+    ["node_mac", "port_type", "port_id", "capability"],
 )
 
 
@@ -229,11 +284,17 @@ class AsusExporter:
             # Collect port metrics
             await self._collect_port_metrics()
 
+            # Collect enhanced port and node metrics
+            await self._collect_node_info_metrics()
+
             # Collect temperature metrics
             await self._collect_temperature_metrics()
 
             # Collect WiFi client metrics
             await self._collect_wifi_metrics()
+
+            # Collect detailed client metrics
+            await self._collect_client_details()
 
             # Collect firmware metrics
             await self._collect_firmware_metrics()
@@ -243,6 +304,9 @@ class AsusExporter:
 
             # Collect LED metrics
             await self._collect_led_metrics()
+
+            # Collect speedtest metrics
+            await self._collect_speedtest_metrics()
 
             CONNECTION_STATUS.set(1)
             LAST_COLLECTION_TIMESTAMP.set_to_current_time()
@@ -387,46 +451,101 @@ class AsusExporter:
         try:
             ports_data = await self.router.async_get_data(AsusData.PORTS)
             if ports_data:
-                for port_type, ports in ports_data.items():
-                    if isinstance(ports, dict):
-                        port_type_name = str(port_type)
-                        for port_id, port_info in ports.items():
-                            if isinstance(port_info, dict):
-                                port_id_str = str(port_id)
-
-                                # Port status
-                                if "state" in port_info:
-                                    PORT_STATUS.labels(
-                                        port_type=port_type_name, port_id=port_id_str
-                                    ).set(1 if port_info["state"] else 0)
-
-                                # Link rate
-                                if "link_rate" in port_info:
-                                    # Convert enum values to numeric if needed
-                                    link_rate = port_info["link_rate"]
-                                    if hasattr(link_rate, "value"):
-                                        link_rate = link_rate.value
-                                    elif isinstance(link_rate, str):
-                                        # Parse common link rate strings
-                                        rate_map = {
-                                            "LINK_10": 10,
-                                            "LINK_100": 100,
-                                            "LINK_1000": 1000,
-                                            "LINK_2500": 2500,
-                                            "LINK_5000": 5000,
-                                            "LINK_10000": 10000,
-                                            "LINK_DOWN": 0,
-                                        }
-                                        link_rate = rate_map.get(link_rate, 0)
-
-                                    PORT_LINK_RATE.labels(
-                                        port_type=port_type_name, port_id=port_id_str
-                                    ).set(float(link_rate))
+                for node_or_type, ports_info in ports_data.items():
+                    if isinstance(ports_info, dict):
+                        # Handle both formats: node-based and direct port type
+                        if all(
+                            isinstance(v, dict)
+                            and any(isinstance(vv, dict) for vv in v.values())
+                            for v in ports_info.values()
+                        ):
+                            # Node-based format
+                            node_mac = str(node_or_type)
+                            for port_type, ports in ports_info.items():
+                                if isinstance(ports, dict):
+                                    await self._process_port_data(
+                                        ports, str(port_type), node_mac
+                                    )
+                        else:
+                            # Direct port type format
+                            await self._process_port_data(
+                                ports_info, str(node_or_type), "main"
+                            )
 
                 logger.debug("Collected port metrics")
         except Exception as e:
             logger.debug(f"Failed to collect port data: {e}")
             COLLECTION_ERRORS_TOTAL.labels(error_type="ports").inc()
+
+    async def _process_port_data(self, ports, port_type_name, node_mac):
+        """Process port data for a specific type and node"""
+        for port_id, port_info in ports.items():
+            if isinstance(port_info, dict):
+                port_id_str = str(port_id)
+
+                # Port status
+                if "state" in port_info:
+                    PORT_STATUS.labels(
+                        port_type=port_type_name, port_id=port_id_str
+                    ).set(1 if port_info["state"] else 0)
+
+                # Link rate
+                if "link_rate" in port_info:
+                    link_rate = port_info["link_rate"]
+                    if hasattr(link_rate, "value"):
+                        link_rate = link_rate.value
+                    elif isinstance(link_rate, str):
+                        # Parse common link rate strings
+                        rate_map = {
+                            "LINK_10": 10,
+                            "LINK_100": 100,
+                            "LINK_1000": 1000,
+                            "LINK_2500": 2500,
+                            "LINK_5000": 5000,
+                            "LINK_10000": 10000,
+                            "LINK_DOWN": 0,
+                        }
+                        link_rate = rate_map.get(link_rate, 0)
+
+                    PORT_LINK_RATE.labels(
+                        port_type=port_type_name, port_id=port_id_str
+                    ).set(float(link_rate))
+
+                # Maximum rate (enhanced metric)
+                if "max_rate" in port_info:
+                    max_rate = port_info["max_rate"]
+                    if hasattr(max_rate, "value"):
+                        max_rate = max_rate.value
+                    elif isinstance(max_rate, str):
+                        rate_map = {
+                            "LINK_10": 10,
+                            "LINK_100": 100,
+                            "LINK_1000": 1000,
+                            "LINK_2500": 2500,
+                            "LINK_5000": 5000,
+                            "LINK_10000": 10000,
+                            "LINK_DOWN": 0,
+                        }
+                        max_rate = rate_map.get(max_rate, 0)
+
+                    PORT_MAX_RATE.labels(
+                        node_mac=node_mac, port_type=port_type_name, port_id=port_id_str
+                    ).set(float(max_rate))
+
+                # Port capabilities (enhanced metric)
+                if "capabilities" in port_info and isinstance(
+                    port_info["capabilities"], list
+                ):
+                    for capability in port_info["capabilities"]:
+                        capability_name = str(capability)
+                        if hasattr(capability, "name"):
+                            capability_name = capability.name
+                        PORT_CAPABILITIES.labels(
+                            node_mac=node_mac,
+                            port_type=port_type_name,
+                            port_id=port_id_str,
+                            capability=capability_name,
+                        ).set(1)
 
     async def _collect_temperature_metrics(self):
         """Collect temperature metrics"""
@@ -562,6 +681,185 @@ class AsusExporter:
             logger.debug(f"Failed to collect LED/Aura data: {e}")
             COLLECTION_ERRORS_TOTAL.labels(error_type="led").inc()
 
+    async def _collect_node_info_metrics(self):
+        """Collect node information metrics"""
+        try:
+            node_data = await self.router.async_get_data(AsusData.NODE_INFO)
+            if node_data:
+                for node_mac, node_info in node_data.items():
+                    if isinstance(node_info, dict):
+                        for attribute, value in node_info.items():
+                            try:
+                                numeric_value = float(value) if value is not None else 0
+                                NODE_STATUS.labels(
+                                    node_mac=str(node_mac), attribute=str(attribute)
+                                ).set(numeric_value)
+                            except (ValueError, TypeError):
+                                # Skip non-numeric values
+                                pass
+
+                logger.debug("Collected node info metrics")
+        except Exception as e:
+            logger.debug(f"Failed to collect node info data: {e}")
+            COLLECTION_ERRORS_TOTAL.labels(error_type="node_info").inc()
+
+    async def _collect_client_details(self):
+        """Collect detailed client metrics including individual client data"""
+        try:
+            clients_data = await self.router.async_get_data(AsusData.CLIENTS)
+            if clients_data:
+                # Count clients by connection type
+                connection_counts = {}
+                wifi_clients = 0
+                wired_clients = 0
+
+                for client_mac, client_info in clients_data.items():
+                    if isinstance(client_info, dict):
+                        mac = str(client_mac)
+                        name = client_info.get(
+                            "name", client_info.get("nickName", "Unknown")
+                        )[:50]  # Limit name length
+
+                        # Determine connection type
+                        is_wireless = client_info.get("isWL", "0")
+                        connection_type = "unknown"
+
+                        if is_wireless == "0":
+                            connection_type = "wired"
+                            wired_clients += 1
+                        elif is_wireless == "1":
+                            connection_type = "wifi_2g"
+                            wifi_clients += 1
+                        elif is_wireless == "2":
+                            connection_type = "wifi_5g"
+                            wifi_clients += 1
+                        elif is_wireless == "3":
+                            connection_type = "wifi_6g"
+                            wifi_clients += 1
+
+                        connection_counts[connection_type] = (
+                            connection_counts.get(connection_type, 0) + 1
+                        )
+
+                        # Online status
+                        is_online = client_info.get("isOnline", "0")
+                        CLIENT_ONLINE.labels(
+                            mac=mac, name=name, connection_type=connection_type
+                        ).set(1 if is_online == "1" else 0)
+
+                        # RSSI for wireless clients
+                        if is_wireless != "0" and "rssi" in client_info:
+                            try:
+                                rssi_value = float(client_info["rssi"])
+                                band = (
+                                    "2g"
+                                    if is_wireless == "1"
+                                    else "5g"
+                                    if is_wireless == "2"
+                                    else "6g"
+                                )
+                                CLIENT_RSSI.labels(mac=mac, name=name, band=band).set(
+                                    rssi_value
+                                )
+                            except (ValueError, TypeError):
+                                pass
+
+                        # TX rate
+                        if "curTx" in client_info and client_info["curTx"] is not None:
+                            try:
+                                tx_rate = float(client_info["curTx"])
+                                CLIENT_TX_RATE.labels(
+                                    mac=mac, name=name, connection_type=connection_type
+                                ).set(tx_rate)
+                            except (ValueError, TypeError):
+                                pass
+
+                        # RX rate
+                        if "curRx" in client_info and client_info["curRx"] is not None:
+                            try:
+                                rx_rate = float(client_info["curRx"])
+                                CLIENT_RX_RATE.labels(
+                                    mac=mac, name=name, connection_type=connection_type
+                                ).set(rx_rate)
+                            except (ValueError, TypeError):
+                                pass
+
+                        # Internet access state
+                        internet_state = client_info.get("internetState", "0")
+                        try:
+                            internet_value = (
+                                int(internet_state)
+                                if isinstance(internet_state, str)
+                                else int(internet_state)
+                            )
+                            CLIENT_INTERNET_STATE.labels(
+                                mac=mac, name=name, connection_type=connection_type
+                            ).set(internet_value)
+                        except (ValueError, TypeError):
+                            pass
+
+                # Set connection type counts
+                for conn_type, count in connection_counts.items():
+                    CLIENT_COUNT_BY_TYPE.labels(type=conn_type).set(count)
+
+                # Set totals
+                CLIENT_COUNT_BY_TYPE.labels(type="wifi_total").set(wifi_clients)
+                CLIENT_COUNT_BY_TYPE.labels(type="wired_total").set(wired_clients)
+                CLIENT_COUNT_BY_TYPE.labels(type="total").set(len(clients_data))
+
+                logger.debug(
+                    f"Collected detailed metrics for {len(clients_data)} clients"
+                )
+
+        except Exception as e:
+            logger.debug(f"Failed to collect detailed client data: {e}")
+            COLLECTION_ERRORS_TOTAL.labels(error_type="client_details").inc()
+
+    async def _collect_speedtest_metrics(self):
+        """Collect speedtest metrics"""
+        try:
+            speedtest_data = await self.router.async_get_data(AsusData.SPEEDTEST_RESULT)
+            if speedtest_data:
+                result = speedtest_data.get("result")
+                if result and isinstance(result, dict):
+                    # Download speed
+                    if "download" in result:
+                        try:
+                            download_mbps = float(result["download"])
+                            SPEEDTEST_DOWNLOAD_MBPS.set(download_mbps)
+                        except (ValueError, TypeError):
+                            pass
+
+                    # Upload speed
+                    if "upload" in result:
+                        try:
+                            upload_mbps = float(result["upload"])
+                            SPEEDTEST_UPLOAD_MBPS.set(upload_mbps)
+                        except (ValueError, TypeError):
+                            pass
+
+                    # Ping
+                    if "ping" in result:
+                        try:
+                            ping_ms = float(result["ping"])
+                            SPEEDTEST_PING_MS.set(ping_ms)
+                        except (ValueError, TypeError):
+                            pass
+
+                    # Timestamp
+                    if "timestamp" in result:
+                        try:
+                            timestamp = float(result["timestamp"])
+                            SPEEDTEST_TIMESTAMP.set(timestamp)
+                        except (ValueError, TypeError):
+                            pass
+
+                logger.debug("Collected speedtest metrics")
+
+        except Exception as e:
+            logger.debug(f"Failed to collect speedtest data: {e}")
+            COLLECTION_ERRORS_TOTAL.labels(error_type="speedtest").inc()
+
     async def metrics_collection_loop(self):
         """Main loop for collecting metrics"""
         while True:
@@ -612,9 +910,24 @@ Available Endpoints:
 Collected Metrics:
 - System: CPU usage, load average, memory usage
 - Network: WAN/LAN traffic, port status, client counts
-- Hardware: Temperature sensors, port link rates
-- WiFi: Client counts by band, association stats
+- Hardware: Temperature sensors, port link rates, port capabilities
+- WiFi: Client counts by band, association stats, individual client RSSI
+- Clients: Individual client TX/RX rates, connection types, online status
 - Services: VPN status, LED status, firmware info
+- Performance: Speedtest results (download/upload/ping)
+- Infrastructure: Node information, enhanced port details
+
+Enhanced Client Metrics:
+- Individual client TX/RX rates in real-time
+- Client RSSI values for WiFi connections
+- Connection type classification (wired/wifi 2.4G/5G/6G)
+- Internet access permission status per client
+- Online/offline status tracking
+
+Enhanced Network Metrics:
+- Detailed port capabilities and maximum rates
+- Node-level port information for mesh networks
+- Real-time client bandwidth utilization
 
 Configuration:
 - Router: {hostname}
