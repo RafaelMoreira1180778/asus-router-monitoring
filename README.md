@@ -1,6 +1,18 @@
 # ASUS Router Monitoring Stack
 
-A comprehensive monitoring solution for ASUS ro## 🐍 Local Development (Python 3.12+)ters using Prometheus, Grafana, and a custom Python exporter. This stack provides real-time visualization of router performance, network traffic, system health, and hardware metrics.
+A comprehensive monitoring solution for ASUS routers using Prometheus, Grafana, and a custom Python exporter. This stack provides real-time visualization of router performance, network traffic, system health, and hardware metrics.
+
+## 📖 Overview
+
+This project provides a complete monitoring solution for ASUS routers, featuring:
+
+- **🔍 Comprehensive Metrics**: CPU, RAM, network traffic, WiFi clients, temperatures, ports, and more
+- **📊 Beautiful Dashboards**: Pre-configured Grafana dashboards with real-time visualizations
+- **🐳 Easy Deployment**: Docker Compose stack with persistent storage and health checks
+- **🔧 Production Ready**: Secure, scalable, and maintainable monitoring infrastructure
+- **🐍 Python 3.12+**: Modern Python with robust error handling and async operations
+
+**Tested with**: ASUS AX-series routers (see [compatibility list](https://github.com/Vaskivskyi/asusrouter#supported-devices))
 
 ## 🚀 Features
 
@@ -31,8 +43,9 @@ A comprehensive monitoring solution for ASUS ro## 🐍 Local Development (Python
 ### 1. Clone and Configure
 
 ```bash
-# Navigate to your project directory
-cd monitor-asus
+# Clone the repository
+git clone https://github.com/RafaelMoreira1180778/asus-router-monitoring.git
+cd asus-router-monitoring
 
 # Copy the environment template
 cp .env.example .env
@@ -77,7 +90,7 @@ docker-compose logs -f asus-exporter
 - **Prometheus**: http://localhost:9090
 - **Exporter**: http://localhost:8000/metrics
 
-## � Local Development (Python 3.13+)
+## 🐍 Local Development (Python 3.12+)
 
 For development or running without Docker:
 
@@ -120,7 +133,7 @@ python3 asus_exporter.py
 
 The exporter will be available at: http://localhost:8000/metrics
 
-## �📊 Available Metrics
+## 📊 Available Metrics
 
 ### System Metrics
 | Metric Name                   | Description                       | Type  |
@@ -366,7 +379,7 @@ sudo systemctl restart docker
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines:
 
 1. Test with your router model
 2. Add documentation for new metrics
@@ -382,7 +395,14 @@ Contributions are welcome! Please:
 
 ## 📄 License
 
-This project is open source. The AsusRouter library is developed by [Vaskivskyi](https://github.com/Vaskivskyi/asusrouter).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+### Third-Party Acknowledgments
+
+This project uses the following open-source libraries:
+- **AsusRouter**: [Vaskivskyi/asusrouter](https://github.com/Vaskivskyi/asusrouter) (MIT License)
+- **Prometheus**: [prometheus.io](https://prometheus.io/) (Apache License 2.0)
+- **Grafana**: [grafana.com](https://grafana.com/) (AGPLv3 License)
 
 ---
 
