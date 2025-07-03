@@ -1,5 +1,5 @@
 services:
-  # ASUS Router Prometheus Exporter
+  # ASUS Router Prometheus Exporter v2.0 - Modular Architecture
   asus-exporter:
     build: .
     container_name: asus-exporter
@@ -13,10 +13,11 @@ services:
       - EXPORTER_PORT=8000
       - EXPORTER_LOG_LEVEL=${EXPORTER_LOG_LEVEL:-INFO}
       - EXPORTER_COLLECTION_INTERVAL=${EXPORTER_COLLECTION_INTERVAL:-15}
+      - EXPORTER_CACHE_TIME=${EXPORTER_CACHE_TIME:-5}
       - TZ=${TZ:-UTC}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3

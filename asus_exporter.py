@@ -1,1030 +1,131 @@
 #!/usr/bin/env python3
 """
 ASUS Router Prometheus Exporter
-
-This script creates a comprehensive Prometheus exporter that fetches metrics from ASUS routers
-using the AsusRouter library and exposes them in Prometheus format.
+Entry point for the ASUS Router monitoring application
 """
 
+import argparse
 import asyncio
-import logging
-import os
 import sys
-from typing import Optional
 
-from aiohttp import web
-from asusrouter import AsusData, AsusRouter
-from prometheus_client import (
-    Counter,
-    Gauge,
-    Histogram,
-    Info,
-    generate_latest,
-)
-
-# Configure logging
-log_level = os.getenv("EXPORTER_LOG_LEVEL", "INFO").upper()
-logging.basicConfig(
-    level=getattr(logging, log_level),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
-
-# Collection timing
-collection_time = Histogram(
-    "asus_collection_duration_seconds", "Time spent collecting metrics from router"
-)
-
-# System metrics
-CPU_USAGE = Gauge("asus_cpu_usage_percent", "CPU usage percentage")
-LOAD_AVERAGE = Gauge("asus_load_average", "System load average", ["period"])
-
-# Memory metrics
-RAM_USED = Gauge("asus_ram_used_bytes", "RAM used in bytes")
-RAM_FREE = Gauge("asus_ram_free_bytes", "RAM free in bytes")
-RAM_TOTAL = Gauge("asus_ram_total_bytes", "RAM total in bytes")
-RAM_USAGE_PERCENT = Gauge("asus_ram_usage_percent", "RAM usage percentage")
-RAM_BUFFERS = Gauge("asus_ram_buffers_bytes", "RAM buffers in bytes")
-RAM_CACHE = Gauge("asus_ram_cache_bytes", "RAM cache in bytes")
-RAM_SWAP1 = Gauge("asus_ram_swap1_bytes", "RAM swap1 in bytes")
-RAM_SWAP2 = Gauge("asus_ram_swap2_bytes", "RAM swap2 in bytes")
-NVRAM_USED = Gauge("asus_nvram_used_bytes", "NVRAM used in bytes")
-JFFS_FREE = Gauge("asus_jffs_free_megabytes", "JFFS free space in MB")
-JFFS_USED = Gauge("asus_jffs_used_megabytes", "JFFS used space in MB")
-JFFS_TOTAL = Gauge("asus_jffs_total_megabytes", "JFFS total space in MB")
-
-# Network interface metrics - WAN
-WAN_RX_BYTES = Counter("asus_wan_rx_bytes_total", "WAN RX bytes total")
-WAN_TX_BYTES = Counter("asus_wan_tx_bytes_total", "WAN TX bytes total")
-WAN_RX_RATE = Gauge("asus_wan_rx_rate_bytes_per_sec", "WAN RX rate in bytes per second")
-WAN_TX_RATE = Gauge("asus_wan_tx_rate_bytes_per_sec", "WAN TX rate in bytes per second")
-
-# Network interface metrics - LAN/WiFi
-INTERFACE_RX_BYTES = Counter(
-    "asus_interface_rx_bytes_total", "Interface RX bytes total", ["interface"]
-)
-INTERFACE_TX_BYTES = Counter(
-    "asus_interface_tx_bytes_total", "Interface TX bytes total", ["interface"]
-)
-
-# Port metrics
-PORT_STATUS = Gauge(
-    "asus_port_status", "Port status (1=up, 0=down)", ["port_type", "port_id"]
-)
-PORT_LINK_RATE = Gauge(
-    "asus_port_link_rate_mbps", "Port link rate in Mbps", ["port_type", "port_id"]
-)
-
-# Temperature metrics
-TEMPERATURE = Gauge("asus_temperature_celsius", "Temperature in Celsius", ["sensor"])
-
-# WiFi client metrics
-WIFI_CLIENTS_TOTAL = Gauge("asus_wifi_clients_total", "Total number of WiFi clients")
-WIFI_CLIENTS_BY_BAND = Gauge(
-    "asus_wifi_clients_by_band", "Number of WiFi clients by band", ["band"]
-)
-WIFI_CLIENTS_ASSOCIATED = Gauge(
-    "asus_wifi_clients_associated", "WiFi clients associated", ["band"]
-)
-WIFI_CLIENTS_AUTHORIZED = Gauge(
-    "asus_wifi_clients_authorized", "WiFi clients authorized", ["band"]
-)
-WIFI_CLIENTS_AUTHENTICATED = Gauge(
-    "asus_wifi_clients_authenticated", "WiFi clients authenticated", ["band"]
-)
-
-# Client connection metrics
-CLIENT_COUNT_BY_TYPE = Gauge(
-    "asus_client_count_by_type", "Number of clients by connection type", ["type"]
-)
-CLIENT_ONLINE = Gauge(
-    "asus_client_online", "Client online status", ["mac", "name", "connection_type"]
-)
-CLIENT_RSSI = Gauge(
-    "asus_client_rssi_dbm", "Client RSSI in dBm", ["mac", "name", "band"]
-)
-CLIENT_TX_RATE = Gauge(
-    "asus_client_tx_rate_mbps",
-    "Client TX rate in Mbps",
-    ["mac", "name", "connection_type"],
-)
-CLIENT_RX_RATE = Gauge(
-    "asus_client_rx_rate_mbps",
-    "Client RX rate in Mbps",
-    ["mac", "name", "connection_type"],
-)
-CLIENT_INTERNET_STATE = Gauge(
-    "asus_client_internet_state",
-    "Client internet access state",
-    ["mac", "name", "connection_type"],
-)
-
-# Connection metrics
-CONNECTION_STATUS = Gauge(
-    "asus_connection_status", "Router connection status (1=connected, 0=disconnected)"
-)
-TOTAL_CONNECTIONS = Gauge("asus_connections_total", "Total network connections")
-ACTIVE_CONNECTIONS = Gauge("asus_connections_active", "Active network connections")
-
-# System info
-ROUTER_INFO = Info("asus_router", "Router information")
-BOOTTIME = Gauge("asus_boot_timestamp_seconds", "Router boot timestamp")
-
-# Firmware info
-FIRMWARE_INFO = Info("asus_firmware", "Firmware information")
-FIRMWARE_UPDATE_AVAILABLE = Gauge(
-    "asus_firmware_update_available", "Firmware update available (1=yes, 0=no)"
-)
-
-# VPN metrics
-OPENVPN_CLIENT_STATUS = Gauge(
-    "asus_openvpn_client_status", "OpenVPN client status", ["client_id"]
-)
-OPENVPN_SERVER_STATUS = Gauge(
-    "asus_openvpn_server_status", "OpenVPN server status", ["server_id"]
-)
-WIREGUARD_CLIENT_STATUS = Gauge(
-    "asus_wireguard_client_status", "WireGuard client status", ["client_id"]
-)
-WIREGUARD_SERVER_STATUS = Gauge(
-    "asus_wireguard_server_status", "WireGuard server status", ["server_id"]
-)
-
-# LED and Aura metrics
-LED_STATUS = Gauge("asus_led_status", "LED status (1=on, 0=off)")
-AURA_STATUS = Gauge("asus_aura_status", "Aura lighting status")
-
-# Collection metrics
-LAST_COLLECTION_TIMESTAMP = Gauge(
-    "asus_last_collection_timestamp_seconds", "Timestamp of last successful collection"
-)
-COLLECTION_ERRORS_TOTAL = Counter(
-    "asus_collection_errors_total", "Total collection errors", ["error_type"]
-)
-
-# Speedtest metrics
-SPEEDTEST_DOWNLOAD_MBPS = Gauge(
-    "asus_speedtest_download_mbps", "Speedtest download speed in Mbps"
-)
-SPEEDTEST_UPLOAD_MBPS = Gauge(
-    "asus_speedtest_upload_mbps", "Speedtest upload speed in Mbps"
-)
-SPEEDTEST_PING_MS = Gauge("asus_speedtest_ping_ms", "Speedtest ping in milliseconds")
-SPEEDTEST_TIMESTAMP = Gauge(
-    "asus_speedtest_timestamp_seconds", "Speedtest last run timestamp"
-)
-
-# Node information
-NODE_STATUS = Gauge(
-    "asus_node_status", "Node status information", ["node_mac", "attribute"]
-)
-
-# Enhanced port metrics
-PORT_MAX_RATE = Gauge(
-    "asus_port_max_rate_mbps",
-    "Port maximum rate in Mbps",
-    ["node_mac", "port_type", "port_id"],
-)
-PORT_CAPABILITIES = Gauge(
-    "asus_port_capabilities",
-    "Port capabilities",
-    ["node_mac", "port_type", "port_id", "capability"],
-)
-
-
-class AsusExporter:
-    def __init__(
-        self,
-        hostname: str,
-        username: str,
-        password: str,
-        use_ssl: bool = False,
-        port: int = 8000,
-        collection_interval: int = 15,
-    ):
-        self.hostname = hostname
-        self.username = username
-        self.password = password
-        self.use_ssl = use_ssl
-        self.port = port
-        self.collection_interval = collection_interval
-        self.router: Optional[AsusRouter] = None
-        self.is_connected = False
-
-    async def connect_router(self):
-        """Connect to the ASUS router"""
-        try:
-            self.router = AsusRouter(
-                hostname=self.hostname,
-                username=self.username,
-                password=self.password,
-                use_ssl=self.use_ssl,
-            )
-            await self.router.async_connect()
-            self.is_connected = True
-            CONNECTION_STATUS.set(1)
-            logger.info(f"Successfully connected to router at {self.hostname}")
-
-            # Set router info
-            try:
-                info = await self.router.async_get_data(AsusData.DEVICEMAP)
-                if info:
-                    router_info = {
-                        "model": str(info.get("model", "unknown")),
-                        "firmware": str(info.get("firmware", "unknown")),
-                        "hostname": self.hostname,
-                        "brand": str(info.get("brand", "ASUSTek")),
-                    }
-                    ROUTER_INFO.info(router_info)
-                    logger.info(
-                        f"Router model: {router_info['model']}, firmware: {router_info['firmware']}"
-                    )
-
-                # Set boot time if available
-                boot_data = await self.router.async_get_data(AsusData.BOOTTIME)
-                if boot_data and "timestamp" in boot_data:
-                    BOOTTIME.set(boot_data["timestamp"])
-
-            except Exception as e:
-                logger.warning(f"Could not fetch router info: {e}")
-
-        except Exception as e:
-            self.is_connected = False
-            CONNECTION_STATUS.set(0)
-            logger.error(f"Failed to connect to router: {e}")
-            raise
-
-    @collection_time.time()
-    async def collect_metrics(self):
-        """Collect all available metrics from the router"""
-        if not self.router or not self.is_connected:
-            logger.warning("Router not connected, attempting to reconnect...")
-            try:
-                await self.connect_router()
-            except Exception:
-                COLLECTION_ERRORS_TOTAL.labels(error_type="connection").inc()
-                return
-
-        try:
-            # Collect CPU and system metrics
-            await self._collect_cpu_metrics()
-
-            # Collect memory metrics
-            await self._collect_memory_metrics()
-
-            # Collect system info metrics
-            await self._collect_sysinfo_metrics()
-
-            # Collect network metrics
-            await self._collect_network_metrics()
-
-            # Collect WAN metrics
-            await self._collect_wan_metrics()
-
-            # Collect port metrics
-            await self._collect_port_metrics()
-
-            # Collect enhanced port and node metrics
-            await self._collect_node_info_metrics()
-
-            # Collect temperature metrics
-            await self._collect_temperature_metrics()
-
-            # Collect WiFi client metrics
-            await self._collect_wifi_metrics()
-
-            # Collect detailed client metrics
-            await self._collect_client_details()
-
-            # Collect firmware metrics
-            await self._collect_firmware_metrics()
-
-            # Collect VPN metrics
-            await self._collect_vpn_metrics()
-
-            # Collect LED metrics
-            await self._collect_led_metrics()
-
-            # Collect speedtest metrics
-            await self._collect_speedtest_metrics()
-
-            CONNECTION_STATUS.set(1)
-            LAST_COLLECTION_TIMESTAMP.set_to_current_time()
-            logger.debug("Successfully collected all available metrics")
-
-        except Exception as e:
-            logger.error(f"Error collecting metrics: {e}")
-            self.is_connected = False
-            CONNECTION_STATUS.set(0)
-            COLLECTION_ERRORS_TOTAL.labels(error_type="general").inc()
-
-    async def _collect_cpu_metrics(self):
-        """Collect CPU metrics"""
-        try:
-            cpu_data = await self.router.async_get_data(AsusData.CPU)
-            if cpu_data and "usage" in cpu_data:
-                CPU_USAGE.set(float(cpu_data["usage"]))
-                logger.debug(f"CPU usage: {cpu_data['usage']}%")
-        except Exception as e:
-            logger.debug(f"Failed to collect CPU data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="cpu").inc()
-
-    async def _collect_memory_metrics(self):
-        """Collect RAM and memory metrics"""
-        try:
-            ram_data = await self.router.async_get_data(AsusData.RAM)
-            if ram_data:
-                if "used" in ram_data:
-                    RAM_USED.set(float(ram_data["used"]))
-                if "free" in ram_data:
-                    RAM_FREE.set(float(ram_data["free"]))
-                if "total" in ram_data:
-                    RAM_TOTAL.set(float(ram_data["total"]))
-                if "usage" in ram_data:
-                    RAM_USAGE_PERCENT.set(float(ram_data["usage"]))
-
-                logger.debug(
-                    f"RAM - Used: {ram_data.get('used', 'N/A')}, Free: {ram_data.get('free', 'N/A')}"
-                )
-        except Exception as e:
-            logger.debug(f"Failed to collect RAM data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="memory").inc()
-
-    async def _collect_sysinfo_metrics(self):
-        """Collect system information metrics"""
-        try:
-            sysinfo_data = await self.router.async_get_data(AsusData.SYSINFO)
-            if sysinfo_data:
-                # Connection stats
-                connections = sysinfo_data.get("connections", {})
-                if "total" in connections:
-                    TOTAL_CONNECTIONS.set(connections["total"])
-                if "active" in connections:
-                    ACTIVE_CONNECTIONS.set(connections["active"])
-
-                # Memory details
-                memory = sysinfo_data.get("memory", {})
-                for key, metric in [
-                    ("buffers", RAM_BUFFERS),
-                    ("cache", RAM_CACHE),
-                    ("swap_1", RAM_SWAP1),
-                    ("swap_2", RAM_SWAP2),
-                    ("nvram", NVRAM_USED),
-                    ("jffs_free", JFFS_FREE),
-                    ("jffs_used", JFFS_USED),
-                    ("jffs_total", JFFS_TOTAL),
-                ]:
-                    if key in memory and memory[key] is not None:
-                        metric.set(float(memory[key]))
-
-                # Load average
-                load_avg = sysinfo_data.get("load_avg", {})
-                for period in [1, 5, 15]:
-                    if period in load_avg:
-                        LOAD_AVERAGE.labels(period=f"{period}m").set(
-                            float(load_avg[period])
-                        )
-
-                # WiFi client details by band
-                wlan = sysinfo_data.get("wlan", {})
-                for band, stats in wlan.items():
-                    if isinstance(stats, dict):
-                        band_name = str(band)
-                        for metric_name, metric_gauge in [
-                            ("client_associated", WIFI_CLIENTS_ASSOCIATED),
-                            ("client_authorized", WIFI_CLIENTS_AUTHORIZED),
-                            ("client_authenticated", WIFI_CLIENTS_AUTHENTICATED),
-                        ]:
-                            if metric_name in stats:
-                                metric_gauge.labels(band=band_name).set(
-                                    float(stats[metric_name])
-                                )
-
-                logger.debug("Collected system info metrics")
-        except Exception as e:
-            logger.debug(f"Failed to collect sysinfo data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="sysinfo").inc()
-
-    async def _collect_network_metrics(self):
-        """Collect network interface metrics"""
-        try:
-            network_data = await self.router.async_get_data(AsusData.NETWORK)
-            if network_data:
-                for interface, stats in network_data.items():
-                    if isinstance(stats, dict) and "rx" in stats and "tx" in stats:
-                        interface_name = str(interface)
-                        INTERFACE_RX_BYTES.labels(
-                            interface=interface_name
-                        )._value._value = float(stats["rx"])
-                        INTERFACE_TX_BYTES.labels(
-                            interface=interface_name
-                        )._value._value = float(stats["tx"])
-
-                logger.debug("Collected network interface metrics")
-        except Exception as e:
-            logger.debug(f"Failed to collect network data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="network").inc()
-
-    async def _collect_wan_metrics(self):
-        """Collect WAN metrics"""
-        try:
-            wan_data = await self.router.async_get_data(AsusData.WAN)
-            if wan_data:
-                if "rx_bytes" in wan_data:
-                    WAN_RX_BYTES._value._value = float(wan_data["rx_bytes"])
-                if "tx_bytes" in wan_data:
-                    WAN_TX_BYTES._value._value = float(wan_data["tx_bytes"])
-                if "rx_rate" in wan_data:
-                    WAN_RX_RATE.set(float(wan_data["rx_rate"]))
-                if "tx_rate" in wan_data:
-                    WAN_TX_RATE.set(float(wan_data["tx_rate"]))
-
-                logger.debug(
-                    f"WAN - RX: {wan_data.get('rx_bytes', 'N/A')}, TX: {wan_data.get('tx_bytes', 'N/A')}"
-                )
-        except Exception as e:
-            logger.debug(f"Failed to collect WAN data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="wan").inc()
-
-    async def _collect_port_metrics(self):
-        """Collect port status metrics"""
-        try:
-            ports_data = await self.router.async_get_data(AsusData.PORTS)
-            if ports_data:
-                for node_or_type, ports_info in ports_data.items():
-                    if isinstance(ports_info, dict):
-                        # Handle both formats: node-based and direct port type
-                        if all(
-                            isinstance(v, dict)
-                            and any(isinstance(vv, dict) for vv in v.values())
-                            for v in ports_info.values()
-                        ):
-                            # Node-based format
-                            node_mac = str(node_or_type)
-                            for port_type, ports in ports_info.items():
-                                if isinstance(ports, dict):
-                                    await self._process_port_data(
-                                        ports, str(port_type), node_mac
-                                    )
-                        else:
-                            # Direct port type format
-                            await self._process_port_data(
-                                ports_info, str(node_or_type), "main"
-                            )
-
-                logger.debug("Collected port metrics")
-        except Exception as e:
-            logger.debug(f"Failed to collect port data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="ports").inc()
-
-    async def _process_port_data(self, ports, port_type_name, node_mac):
-        """Process port data for a specific type and node"""
-        for port_id, port_info in ports.items():
-            if isinstance(port_info, dict):
-                port_id_str = str(port_id)
-
-                # Port status
-                if "state" in port_info:
-                    PORT_STATUS.labels(
-                        port_type=port_type_name, port_id=port_id_str
-                    ).set(1 if port_info["state"] else 0)
-
-                # Link rate
-                if "link_rate" in port_info:
-                    link_rate = port_info["link_rate"]
-                    if hasattr(link_rate, "value"):
-                        link_rate = link_rate.value
-                    elif isinstance(link_rate, str):
-                        # Parse common link rate strings
-                        rate_map = {
-                            "LINK_10": 10,
-                            "LINK_100": 100,
-                            "LINK_1000": 1000,
-                            "LINK_2500": 2500,
-                            "LINK_5000": 5000,
-                            "LINK_10000": 10000,
-                            "LINK_DOWN": 0,
-                        }
-                        link_rate = rate_map.get(link_rate, 0)
-
-                    PORT_LINK_RATE.labels(
-                        port_type=port_type_name, port_id=port_id_str
-                    ).set(float(link_rate))
-
-                # Maximum rate (enhanced metric)
-                if "max_rate" in port_info:
-                    max_rate = port_info["max_rate"]
-                    if hasattr(max_rate, "value"):
-                        max_rate = max_rate.value
-                    elif isinstance(max_rate, str):
-                        rate_map = {
-                            "LINK_10": 10,
-                            "LINK_100": 100,
-                            "LINK_1000": 1000,
-                            "LINK_2500": 2500,
-                            "LINK_5000": 5000,
-                            "LINK_10000": 10000,
-                            "LINK_DOWN": 0,
-                        }
-                        max_rate = rate_map.get(max_rate, 0)
-
-                    PORT_MAX_RATE.labels(
-                        node_mac=node_mac, port_type=port_type_name, port_id=port_id_str
-                    ).set(float(max_rate))
-
-                # Port capabilities (enhanced metric)
-                if "capabilities" in port_info and isinstance(
-                    port_info["capabilities"], list
-                ):
-                    for capability in port_info["capabilities"]:
-                        capability_name = str(capability)
-                        if hasattr(capability, "name"):
-                            capability_name = capability.name
-                        PORT_CAPABILITIES.labels(
-                            node_mac=node_mac,
-                            port_type=port_type_name,
-                            port_id=port_id_str,
-                            capability=capability_name,
-                        ).set(1)
-
-    async def _collect_temperature_metrics(self):
-        """Collect temperature metrics"""
-        try:
-            temp_data = await self.router.async_get_data(AsusData.TEMPERATURE)
-            if temp_data:
-                for sensor, temp in temp_data.items():
-                    if isinstance(temp, (int, float)):
-                        sensor_name = str(sensor)
-                        TEMPERATURE.labels(sensor=sensor_name).set(float(temp))
-
-                logger.debug(f"Temperature data: {temp_data}")
-        except Exception as e:
-            logger.debug(f"Failed to collect temperature data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="temperature").inc()
-
-    async def _collect_wifi_metrics(self):
-        """Collect WiFi client metrics"""
-        try:
-            wifi_data = await self.router.async_get_data(AsusData.CLIENTS)
-            if wifi_data:
-                total_clients = len(wifi_data)
-                WIFI_CLIENTS_TOTAL.set(total_clients)
-
-                # Count clients by band if available
-                bands = {}
-                for client in wifi_data.values():
-                    if isinstance(client, dict) and "band" in client:
-                        band = str(client["band"])
-                        bands[band] = bands.get(band, 0) + 1
-
-                for band, count in bands.items():
-                    WIFI_CLIENTS_BY_BAND.labels(band=band).set(count)
-
-                logger.debug(f"WiFi clients: total={total_clients}, by band={bands}")
-        except Exception as e:
-            logger.debug(f"Failed to collect WiFi client data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="wifi").inc()
-
-    async def _collect_firmware_metrics(self):
-        """Collect firmware metrics"""
-        try:
-            firmware_data = await self.router.async_get_data(AsusData.FIRMWARE)
-            if firmware_data:
-                # Firmware info
-                if "current" in firmware_data:
-                    FIRMWARE_INFO.info(
-                        {
-                            "current": str(firmware_data.get("current", "unknown")),
-                            "available": str(firmware_data.get("available", "none")),
-                            "state": str(firmware_data.get("state", "unknown")),
-                        }
-                    )
-
-                # Update availability
-                if "state" in firmware_data:
-                    FIRMWARE_UPDATE_AVAILABLE.set(1 if firmware_data["state"] else 0)
-
-                logger.debug("Collected firmware metrics")
-        except Exception as e:
-            logger.debug(f"Failed to collect firmware data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="firmware").inc()
-
-    async def _collect_vpn_metrics(self):
-        """Collect VPN metrics"""
-        try:
-            # OpenVPN metrics
-            try:
-                openvpn_data = await self.router.async_get_data(AsusData.OPENVPN)
-                if openvpn_data:
-                    # Client metrics
-                    clients = openvpn_data.get("client", {})
-                    for client_id, client_info in clients.items():
-                        if isinstance(client_info, dict) and "state" in client_info:
-                            state_value = client_info["state"]
-                            # Convert enum to numeric if needed
-                            if hasattr(state_value, "value"):
-                                state_value = state_value.value
-                            OPENVPN_CLIENT_STATUS.labels(client_id=str(client_id)).set(
-                                state_value
-                            )
-
-                    # Server metrics
-                    servers = openvpn_data.get("server", {})
-                    for server_id, server_info in servers.items():
-                        if isinstance(server_info, dict) and "state" in server_info:
-                            state_value = server_info["state"]
-                            if hasattr(state_value, "value"):
-                                state_value = state_value.value
-                            OPENVPN_SERVER_STATUS.labels(server_id=str(server_id)).set(
-                                state_value
-                            )
-
-                    logger.debug("Collected OpenVPN metrics")
-            except Exception as e:
-                logger.debug(f"OpenVPN metrics not available: {e}")
-
-            # WireGuard metrics
-            try:
-                wg_data = await self.router.async_get_data(AsusData.WIREGUARD)
-                if wg_data:
-                    # Process WireGuard data similar to OpenVPN
-                    logger.debug("Collected WireGuard metrics")
-            except Exception as e:
-                logger.debug(f"WireGuard metrics not available: {e}")
-
-        except Exception as e:
-            logger.debug(f"Failed to collect VPN data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="vpn").inc()
-
-    async def _collect_led_metrics(self):
-        """Collect LED and Aura metrics"""
-        try:
-            # LED status
-            try:
-                led_data = await self.router.async_get_data(AsusData.LED)
-                if led_data and "state" in led_data:
-                    LED_STATUS.set(1 if led_data["state"] else 0)
-                    logger.debug("Collected LED metrics")
-            except Exception as e:
-                logger.debug(f"LED metrics not available: {e}")
-
-            # Aura lighting
-            try:
-                aura_data = await self.router.async_get_data(AsusData.AURA)
-                if aura_data and "state" in aura_data:
-                    AURA_STATUS.set(aura_data["state"])
-                    logger.debug("Collected Aura metrics")
-            except Exception as e:
-                logger.debug(f"Aura metrics not available: {e}")
-
-        except Exception as e:
-            logger.debug(f"Failed to collect LED/Aura data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="led").inc()
-
-    async def _collect_node_info_metrics(self):
-        """Collect node information metrics"""
-        try:
-            node_data = await self.router.async_get_data(AsusData.NODE_INFO)
-            if node_data:
-                for node_mac, node_info in node_data.items():
-                    if isinstance(node_info, dict):
-                        for attribute, value in node_info.items():
-                            try:
-                                numeric_value = float(value) if value is not None else 0
-                                NODE_STATUS.labels(
-                                    node_mac=str(node_mac), attribute=str(attribute)
-                                ).set(numeric_value)
-                            except (ValueError, TypeError):
-                                # Skip non-numeric values
-                                pass
-
-                logger.debug("Collected node info metrics")
-        except Exception as e:
-            logger.debug(f"Failed to collect node info data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="node_info").inc()
-
-    async def _collect_client_details(self):
-        """Collect detailed client metrics including individual client data"""
-        try:
-            clients_data = await self.router.async_get_data(AsusData.CLIENTS)
-            if clients_data:
-                # Count clients by connection type
-                connection_counts = {}
-                wifi_clients = 0
-                wired_clients = 0
-
-                for client_mac, client_info in clients_data.items():
-                    if isinstance(client_info, dict):
-                        mac = str(client_mac)
-                        name = client_info.get(
-                            "name", client_info.get("nickName", "Unknown")
-                        )[:50]  # Limit name length
-
-                        # Determine connection type
-                        is_wireless = client_info.get("isWL", "0")
-                        connection_type = "unknown"
-
-                        if is_wireless == "0":
-                            connection_type = "wired"
-                            wired_clients += 1
-                        elif is_wireless == "1":
-                            connection_type = "wifi_2g"
-                            wifi_clients += 1
-                        elif is_wireless == "2":
-                            connection_type = "wifi_5g"
-                            wifi_clients += 1
-                        elif is_wireless == "3":
-                            connection_type = "wifi_6g"
-                            wifi_clients += 1
-
-                        connection_counts[connection_type] = (
-                            connection_counts.get(connection_type, 0) + 1
-                        )
-
-                        # Online status
-                        is_online = client_info.get("isOnline", "0")
-                        CLIENT_ONLINE.labels(
-                            mac=mac, name=name, connection_type=connection_type
-                        ).set(1 if is_online == "1" else 0)
-
-                        # RSSI for wireless clients
-                        if is_wireless != "0" and "rssi" in client_info:
-                            try:
-                                rssi_value = float(client_info["rssi"])
-                                band = (
-                                    "2g"
-                                    if is_wireless == "1"
-                                    else "5g"
-                                    if is_wireless == "2"
-                                    else "6g"
-                                )
-                                CLIENT_RSSI.labels(mac=mac, name=name, band=band).set(
-                                    rssi_value
-                                )
-                            except (ValueError, TypeError):
-                                pass
-
-                        # TX rate
-                        if "curTx" in client_info and client_info["curTx"] is not None:
-                            try:
-                                tx_rate = float(client_info["curTx"])
-                                CLIENT_TX_RATE.labels(
-                                    mac=mac, name=name, connection_type=connection_type
-                                ).set(tx_rate)
-                            except (ValueError, TypeError):
-                                pass
-
-                        # RX rate
-                        if "curRx" in client_info and client_info["curRx"] is not None:
-                            try:
-                                rx_rate = float(client_info["curRx"])
-                                CLIENT_RX_RATE.labels(
-                                    mac=mac, name=name, connection_type=connection_type
-                                ).set(rx_rate)
-                            except (ValueError, TypeError):
-                                pass
-
-                        # Internet access state
-                        internet_state = client_info.get("internetState", "0")
-                        try:
-                            internet_value = (
-                                int(internet_state)
-                                if isinstance(internet_state, str)
-                                else int(internet_state)
-                            )
-                            CLIENT_INTERNET_STATE.labels(
-                                mac=mac, name=name, connection_type=connection_type
-                            ).set(internet_value)
-                        except (ValueError, TypeError):
-                            pass
-
-                # Set connection type counts
-                for conn_type, count in connection_counts.items():
-                    CLIENT_COUNT_BY_TYPE.labels(type=conn_type).set(count)
-
-                # Set totals
-                CLIENT_COUNT_BY_TYPE.labels(type="wifi_total").set(wifi_clients)
-                CLIENT_COUNT_BY_TYPE.labels(type="wired_total").set(wired_clients)
-                CLIENT_COUNT_BY_TYPE.labels(type="total").set(len(clients_data))
-
-                logger.debug(
-                    f"Collected detailed metrics for {len(clients_data)} clients"
-                )
-
-        except Exception as e:
-            logger.debug(f"Failed to collect detailed client data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="client_details").inc()
-
-    async def _collect_speedtest_metrics(self):
-        """Collect speedtest metrics"""
-        try:
-            speedtest_data = await self.router.async_get_data(AsusData.SPEEDTEST_RESULT)
-            if speedtest_data:
-                result = speedtest_data.get("result")
-                if result and isinstance(result, dict):
-                    # Download speed
-                    if "download" in result:
-                        try:
-                            download_mbps = float(result["download"])
-                            SPEEDTEST_DOWNLOAD_MBPS.set(download_mbps)
-                        except (ValueError, TypeError):
-                            pass
-
-                    # Upload speed
-                    if "upload" in result:
-                        try:
-                            upload_mbps = float(result["upload"])
-                            SPEEDTEST_UPLOAD_MBPS.set(upload_mbps)
-                        except (ValueError, TypeError):
-                            pass
-
-                    # Ping
-                    if "ping" in result:
-                        try:
-                            ping_ms = float(result["ping"])
-                            SPEEDTEST_PING_MS.set(ping_ms)
-                        except (ValueError, TypeError):
-                            pass
-
-                    # Timestamp
-                    if "timestamp" in result:
-                        try:
-                            timestamp = float(result["timestamp"])
-                            SPEEDTEST_TIMESTAMP.set(timestamp)
-                        except (ValueError, TypeError):
-                            pass
-
-                logger.debug("Collected speedtest metrics")
-
-        except Exception as e:
-            logger.debug(f"Failed to collect speedtest data: {e}")
-            COLLECTION_ERRORS_TOTAL.labels(error_type="speedtest").inc()
-
-    async def metrics_collection_loop(self):
-        """Main loop for collecting metrics"""
-        while True:
-            try:
-                await self.collect_metrics()
-                await asyncio.sleep(self.collection_interval)
-            except Exception as e:
-                logger.error(f"Error in metrics collection loop: {e}")
-                await asyncio.sleep(
-                    self.collection_interval * 2
-                )  # Wait longer on error
-
-    async def metrics_handler(self, request):
-        """HTTP handler for Prometheus metrics endpoint"""
-        try:
-            data = generate_latest()
-            return web.Response(
-                body=data,
-                headers={"Content-Type": "text/plain; version=0.0.4; charset=utf-8"},
-            )
-        except Exception as e:
-            logger.error(f"Error generating metrics: {e}")
-            return web.Response(text="Error generating metrics", status=500)
-
-    async def health_handler(self, request):
-        """Health check endpoint"""
-        status = "healthy" if self.is_connected else "unhealthy"
-        info = {
-            "status": status,
-            "connection": "connected" if self.is_connected else "disconnected",
-            "router": self.hostname,
-            "collection_interval": self.collection_interval,
-        }
-        return web.Response(
-            text=f"Status: {status}\n"
-            + "\n".join([f"{k}: {v}" for k, v in info.items()])
-        )
-
-    async def info_handler(self, request):
-        """Info endpoint with metrics overview"""
-        info_text = """ASUS Router Prometheus Exporter
-
-Available Endpoints:
-- /metrics       - Prometheus metrics
-- /health        - Health check
-- /info          - This information page
-
-Collected Metrics:
-- System: CPU usage, load average, memory usage
-- Network: WAN/LAN traffic, port status, client counts
-- Hardware: Temperature sensors, port link rates, port capabilities
-- WiFi: Client counts by band, association stats, individual client RSSI
-- Clients: Individual client TX/RX rates, connection types, online status
-- Services: VPN status, LED status, firmware info
-- Performance: Speedtest results (download/upload/ping)
-- Infrastructure: Node information, enhanced port details
-
-Enhanced Client Metrics:
-- Individual client TX/RX rates in real-time
-- Client RSSI values for WiFi connections
-- Connection type classification (wired/wifi 2.4G/5G/6G)
-- Internet access permission status per client
-- Online/offline status tracking
-
-Enhanced Network Metrics:
-- Detailed port capabilities and maximum rates
-- Node-level port information for mesh networks
-- Real-time client bandwidth utilization
-
-Configuration:
-- Router: {hostname}
-- Collection Interval: {interval}s
-- Log Level: {log_level}
-""".format(
-            hostname=self.hostname,
-            interval=self.collection_interval,
-            log_level=log_level,
-        )
-        return web.Response(text=info_text, content_type="text/plain")
-
-    async def start_server(self):
-        """Start the HTTP server"""
-        app = web.Application()
-        app.router.add_get("/metrics", self.metrics_handler)
-        app.router.add_get("/health", self.health_handler)
-        app.router.add_get("/info", self.info_handler)
-        app.router.add_get("/", self.info_handler)
-
-        runner = web.AppRunner(app)
-        await runner.setup()
-        site = web.TCPSite(runner, "0.0.0.0", self.port)
-        await site.start()
-        logger.info(f"Prometheus exporter started on port {self.port}")
-        logger.info(f"Metrics available at: http://0.0.0.0:{self.port}/metrics")
-
-    async def run(self):
-        """Main run method"""
-        logger.info("Starting ASUS Router Prometheus Exporter")
-        logger.info(f"Target router: {self.hostname}")
-        logger.info(f"Collection interval: {self.collection_interval}s")
-
-        # Connect to router
-        await self.connect_router()
-
-        # Start HTTP server
-        await self.start_server()
-
-        # Start metrics collection in background
-        collection_task = asyncio.create_task(self.metrics_collection_loop())
-
-        try:
-            # Keep the server running
-            while True:
-                await asyncio.sleep(3600)
-        except KeyboardInterrupt:
-            logger.info("Shutting down...")
-            collection_task.cancel()
-            try:
-                await collection_task
-            except asyncio.CancelledError:
-                pass
-
-
-def main():
-    """Main entry point"""
-    # Configuration from environment variables or defaults
-    hostname = os.getenv("ASUS_HOSTNAME", "192.168.1.1")
-    username = os.getenv("ASUS_USERNAME", "admin")
-    password = os.getenv("ASUS_PASSWORD")
-    use_ssl = os.getenv("ASUS_USE_SSL", "false").lower() == "true"
-    port = int(os.getenv("EXPORTER_PORT", "8000"))
-    collection_interval = int(os.getenv("EXPORTER_COLLECTION_INTERVAL", "15"))
-
-    if not password:
-        logger.error("Password is required. Set ASUS_PASSWORD environment variable.")
-        print("\nUsage:")
-        print("Set environment variables:")
-        print("  ASUS_HOSTNAME=192.168.1.1 (default)")
-        print("  ASUS_USERNAME=admin (default)")
-        print("  ASUS_PASSWORD=your_password (required)")
-        print("  ASUS_USE_SSL=false (default)")
-        print("  EXPORTER_PORT=8000 (default)")
-        print("  EXPORTER_COLLECTION_INTERVAL=15 (default)")
-        print("  EXPORTER_LOG_LEVEL=INFO (default)")
-        print("\nExample:")
-        print("  ASUS_PASSWORD=mypassword python3 asus_exporter.py")
-        sys.exit(1)
-
-    exporter = AsusExporter(
-        hostname=hostname,
-        username=username,
-        password=password,
-        use_ssl=use_ssl,
-        port=port,
-        collection_interval=collection_interval,
+from src.config import ExporterConfig, setup_logging
+from src.main import AsusExporter
+
+
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="ASUS Router Prometheus Exporter v2.0",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s --hostname 192.168.1.1 --username admin --password mypass
+  %(prog)s --help
+
+Environment Variables:
+  ASUS_HOSTNAME            Router IP address (default: 192.168.1.1)
+  ASUS_USERNAME            Router username (default: admin)
+  ASUS_PASSWORD            Router password (required)
+  ASUS_USE_SSL             Use SSL connection (default: false)
+  EXPORTER_PORT            HTTP server port (default: 8000)
+  EXPORTER_COLLECTION_INTERVAL  Metrics collection interval in seconds (default: 15)
+  EXPORTER_LOG_LEVEL       Log level (default: INFO)
+  EXPORTER_CACHE_TIME      Cache time in seconds (default: 5)
+        """,
     )
+    parser.add_argument("--hostname", help="Router IP address", default=None)
+    parser.add_argument("--username", help="Router username", default=None)
+    parser.add_argument("--password", help="Router password", default=None)
+    parser.add_argument("--use-ssl", action="store_true", help="Use SSL connection")
+    parser.add_argument("--port", type=int, help="HTTP server port", default=None)
+    parser.add_argument(
+        "--collection-interval",
+        type=int,
+        help="Metrics collection interval in seconds",
+        default=None,
+    )
+    parser.add_argument(
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="Log level",
+        default=None,
+    )
+    parser.add_argument(
+        "--cache-time",
+        type=int,
+        help="Cache time in seconds",
+        default=None,
+    )
+    parser.add_argument(
+        "--version", action="version", version="ASUS Router Prometheus Exporter v2.0"
+    )
+    return parser.parse_args()
 
+
+async def main():
+    """Main entry point"""
     try:
-        asyncio.run(exporter.run())
+        args = parse_args()
+
+        # Load configuration from environment variables first
+        try:
+            config = ExporterConfig.from_env()
+        except ValueError:
+            # If environment variables are not set, try to use command line arguments
+            if not args.hostname or not args.username or not args.password:
+                print("❌ Error: Router credentials are required")
+                print("Either set environment variables or use command line arguments:")
+                print(
+                    "  --hostname <router_ip> --username <username> --password <password>"
+                )
+                print(
+                    "Or set environment variables: ASUS_HOSTNAME, ASUS_USERNAME, ASUS_PASSWORD"
+                )
+                sys.exit(1)
+
+            config = ExporterConfig(
+                hostname=args.hostname,
+                username=args.username,
+                password=args.password,
+                use_ssl=args.use_ssl,
+                port=args.port or 8000,
+                collection_interval=args.collection_interval or 15,
+                log_level=args.log_level or "INFO",
+                cache_time=args.cache_time or 5,
+            )
+
+        # Override with command line arguments if provided
+        if args.hostname:
+            config.hostname = args.hostname
+        if args.username:
+            config.username = args.username
+        if args.password:
+            config.password = args.password
+        if args.use_ssl:
+            config.use_ssl = args.use_ssl
+        if args.port:
+            config.port = args.port
+        if args.collection_interval:
+            config.collection_interval = args.collection_interval
+        if args.log_level:
+            config.log_level = args.log_level
+        if args.cache_time:
+            config.cache_time = args.cache_time
+
+        # Setup logging
+        setup_logging(config.log_level)
+
+        # Create and run exporter
+        exporter = AsusExporter(config)
+        await exporter.run_forever()
+
     except KeyboardInterrupt:
-        logger.info("Exporter stopped by user")
+        print("\n🛑 Exporter stopped by user")
+        sys.exit(0)
     except Exception as e:
-        logger.error(f"Exporter failed: {e}")
+        print(f"❌ Failed to start exporter: {e}")
         sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

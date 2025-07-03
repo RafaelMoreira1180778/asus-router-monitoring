@@ -1,30 +1,44 @@
-# ASUS Router Monitoring Stack
+# ASUS Router Monitoring Stack v2.0
 
-A comprehensive monitoring solution for ASUS routers using Prometheus, Grafana, and a custom Python exporter. This stack provides real-time visualization of router performance, network traffic, system health, and hardware metrics.
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Prometheus](https://img.shields.io/badge/prometheus-compatible-orange.svg)](https://prometheus.io/)
+
+A high-performance, modular monitoring solution for ASUS routers with comprehensive metrics collection, beautiful Grafana dashboards, and modern architecture.
 
 ## 📖 Overview
 
 This project provides a complete monitoring solution for ASUS routers, featuring:
 
-- **🔍 Comprehensive Metrics**: CPU, RAM, network traffic, WiFi clients, temperatures, ports, and more
+- **🔍 Comprehensive Metrics**: 200+ metrics across CPU, RAM, network, WiFi, hardware, VPN, and services
 - **📊 Beautiful Dashboards**: Pre-configured Grafana dashboards with real-time visualizations
 - **🐳 Easy Deployment**: Docker Compose stack with persistent storage and health checks
 - **🔧 Production Ready**: Secure, scalable, and maintainable monitoring infrastructure
-- **🐍 Python 3.12+**: Modern Python with robust error handling and async operations
+- **🏗️ Modular Architecture**: 7 specialized collectors for focused functionality
+- **🐍 Python 3.8+**: Modern Python with robust error handling and async operations
 
-**Tested with**: ASUS AX-series routers (see [compatibility list](https://github.com/Vaskivskyi/asusrouter#supported-devices))
+**Tested with**: ASUS routers running AsusWRT/Merlin firmware (see [compatibility list](https://github.com/Vaskivskyi/asusrouter#supported-devices))
 
 ## 🚀 Features
 
-### Router Metrics
-- **System Performance**: CPU usage, load average, memory utilization
-- **Network Traffic**: WAN/LAN traffic rates, bytes transferred, port status
-- **Hardware Monitoring**: Temperature sensors, port link rates, connection status
-- **WiFi Analytics**: Client counts by band, association statistics
-- **System Services**: VPN status, LED status, firmware information
-- **Storage**: NVRAM usage, JFFS filesystem statistics
+### ✨ Complete Monitoring Coverage
+- **🖥️ System Metrics**: CPU, RAM, load average, boot time, connection status
+- **🌐 Network Monitoring**: WAN/LAN traffic, interface statistics, DNS information
+- **📡 WiFi Analytics**: Client tracking, RSSI, TX/RX rates, band analysis, guest networks
+- **🔌 Hardware Status**: Port monitoring, temperature sensors, link capabilities
+- **⚙️ Firmware & System**: Version tracking, update availability, system flags
+- **🔒 VPN Services**: OpenVPN, WireGuard, VPNC status and statistics
+- **🛠️ Additional Services**: LED, Aura lighting, speedtest, AiMesh, DSL, parental controls
 
-### Monitoring Stack
+### 🏗️ Modern Architecture
+- **Modular Design**: 7 specialized collectors for focused functionality
+- **Async Operations**: High-performance concurrent data collection
+- **Error Isolation**: Individual collector failures don't affect others
+- **Comprehensive Logging**: Detailed debugging and monitoring capabilities
+- **Health Endpoints**: Built-in health checks and service monitoring
+
+### 📊 Complete Monitoring Stack
 - **Prometheus**: Time-series database for metrics collection
 - **Grafana**: Advanced dashboards with beautiful visualizations
 - **Docker Compose**: Easy deployment with persistent volumes
@@ -32,8 +46,8 @@ This project provides a complete monitoring solution for ASUS routers, featuring
 
 ## 📋 Prerequisites
 
-- **Docker and Docker Compose**
-- **Python 3.12+** (for local development/testing)
+- **Docker and Docker Compose** (recommended)
+- **Python 3.8+** (for local development/testing)
 - ASUS router with web interface enabled
 - Network access to your router
 - At least 1GB free disk space for metrics storage
@@ -44,7 +58,7 @@ This project provides a complete monitoring solution for ASUS routers, featuring
 
 ```bash
 # Clone the repository
-git clone https://github.com/RafaelMoreira1180778/asus-router-monitoring.git
+git clone https://github.com/your-username/asus-router-monitoring.git
 cd asus-router-monitoring
 
 # Copy the environment template
@@ -69,6 +83,8 @@ ASUS_USE_SSL=false
 PROMETHEUS_PORT=9090
 GRAFANA_PORT=3000
 EXPORTER_PORT=8000
+EXPORTER_COLLECTION_INTERVAL=15
+EXPORTER_LOG_LEVEL=INFO
 ```
 
 ### 3. Start the Monitoring Stack
@@ -84,20 +100,22 @@ docker-compose ps
 docker-compose logs -f asus-exporter
 ```
 
-### 4. Access the Dashboards
+### 4. Access the Services
 
 - **Grafana**: http://localhost:3000 (admin/admin - change in .env)
 - **Prometheus**: http://localhost:9090
 - **Exporter**: http://localhost:8000/metrics
+- **Health Check**: http://localhost:8000/health
+- **Exporter Info**: http://localhost:8000/info
 
-## 🐍 Local Development (Python 3.12+)
+## 🐍 Local Development
 
 For development or running without Docker:
 
 ### 1. Setup Python Environment
 
 ```bash
-# Ensure Python 3.12+ is installed
+# Ensure Python 3.8+ is installed
 python3 --version
 
 # Create virtual environment
@@ -117,23 +135,76 @@ export ASUS_HOSTNAME=192.168.1.1
 export ASUS_USERNAME=admin
 export ASUS_PASSWORD=your_password
 
-# Test connection
-python3 test_connection.py
+# Test the exporter
+python3 asus_exporter.py
 ```
 
-### 3. Run Exporter Locally
+### 3. Development Commands
 
 ```bash
-# Start the exporter
-python3 asus_exporter.py
+# Show available commands
+make help
 
-# Or use the startup script
-./start_exporter.sh
+# Install dependencies
+make install
+
+# Run linting
+make lint
+
+# Run exporter locally
+make run
+
+# Build Docker image
+make docker-build
+
+# Show project structure
+make tree
 ```
 
 The exporter will be available at: http://localhost:8000/metrics
 
-## 📊 Available Metrics
+## 🏗️ Architecture
+
+### Modular Collector System
+
+The v2.0 architecture uses a modular collector system for maintainability and extensibility:
+
+```
+src/
+├── collectors/
+│   ├── system.py          # CPU, RAM, system info, connection status
+│   ├── network.py         # WAN, LAN, interface stats, DNS
+│   ├── wifi.py            # WiFi clients, bands, guest networks
+│   ├── hardware.py        # Ports, temperature, node info
+│   ├── firmware.py        # Firmware info, device info, system flags
+│   ├── vpn.py             # OpenVPN, WireGuard, VPNC
+│   └── services.py        # LED, Aura, speedtest, misc services
+├── metrics/
+│   └── prometheus_metrics.py  # Centralized metric definitions
+├── server/
+│   └── __init__.py        # HTTP server with health endpoints
+├── config.py              # Configuration management
+└── main.py                # Application entry point
+```
+
+### Data Coverage
+
+**34 AsusData Types Supported:**
+- AIMESH, AURA, BOOTTIME, CLIENTS, CPU, DEVICEMAP
+- DSL, FIRMWARE, FIRMWARE_NOTE, FLAGS, GWLAN, LED
+- NETWORK, NODE_INFO, OPENVPN, PARENTAL_CONTROL, PING
+- PORT_FORWARDING, PORTS, RAM, SPEEDTEST, SYSINFO
+- SYSTEM, TEMPERATURE, VPNC, WAN, WIREGUARD, WLAN
+
+### Key Features
+
+- **Error Isolation**: Each collector operates independently
+- **Async Operations**: Concurrent data collection for better performance
+- **Comprehensive Logging**: Detailed debugging and monitoring
+- **Health Endpoints**: `/health`, `/info`, `/collectors` for monitoring
+- **Modular Design**: Easy to extend with new collectors
+
+## 📊 Available Metrics (200+ Total)
 
 ### System Metrics
 | Metric Name                   | Description                       | Type  |
@@ -148,6 +219,12 @@ The exporter will be available at: http://localhost:8000/metrics
 | -------------------------- | --------------------- | ----- |
 | `asus_ram_used_bytes`      | RAM used in bytes     | Gauge |
 | `asus_ram_free_bytes`      | RAM free in bytes     | Gauge |
+| `asus_ram_total_bytes`     | RAM total in bytes    | Gauge |
+| `asus_ram_usage_percent`   | RAM usage percentage  | Gauge |
+| `asus_ram_buffers_bytes`   | RAM buffers in bytes  | Gauge |
+| `asus_ram_cache_bytes`     | RAM cache in bytes    | Gauge |
+| `asus_nvram_used_bytes`    | NVRAM used in bytes   | Gauge |
+| `asus_jffs_free_megabytes` | JFFS free space in MB | Gauge |
 | `asus_ram_total_bytes`     | RAM total in bytes    | Gauge |
 | `asus_ram_usage_percent`   | RAM usage percentage  | Gauge |
 | `asus_ram_buffers_bytes`   | RAM buffers in bytes  | Gauge |
@@ -179,11 +256,25 @@ The exporter will be available at: http://localhost:8000/metrics
 | `asus_wifi_clients_associated`    | Associated clients    | Gauge | `band` |
 | `asus_wifi_clients_authorized`    | Authorized clients    | Gauge | `band` |
 | `asus_wifi_clients_authenticated` | Authenticated clients | Gauge | `band` |
+| `asus_wifi_client_rssi`           | Client RSSI values    | Gauge | `mac`, `name` |
+| `asus_wifi_client_tx_rate`        | Client TX rates       | Gauge | `mac`, `name` |
+| `asus_wifi_client_rx_rate`        | Client RX rates       | Gauge | `mac`, `name` |
 
 ### Hardware Metrics
 | Metric Name                | Description         | Type  | Labels   |
 | -------------------------- | ------------------- | ----- | -------- |
 | `asus_temperature_celsius` | Temperature sensors | Gauge | `sensor` |
+| `asus_port_link_rate_mbps` | Port link rates     | Gauge | `port_type`, `port_id` |
+| `asus_port_capability_max_rate` | Port max capabilities | Gauge | `port_type`, `port_id` |
+
+### VPN Metrics
+| Metric Name                    | Description             | Type  | Labels      |
+| ------------------------------ | ----------------------- | ----- | ----------- |
+| `asus_openvpn_client_status`   | OpenVPN client status   | Gauge | `client_id` |
+| `asus_openvpn_server_status`   | OpenVPN server status   | Gauge | `server_id` |
+| `asus_wireguard_client_status` | WireGuard client status | Gauge | `client_id` |
+| `asus_wireguard_server_status` | WireGuard server status | Gauge | `server_id` |
+| `asus_vpnc_client_status`      | VPNC client status      | Gauge | `client_id` |
 
 ### Service Metrics
 | Metric Name                      | Description               | Type  | Labels      |
@@ -191,14 +282,9 @@ The exporter will be available at: http://localhost:8000/metrics
 | `asus_firmware_update_available` | Firmware update available | Gauge | -           |
 | `asus_led_status`                | LED status                | Gauge | -           |
 | `asus_aura_status`               | Aura lighting status      | Gauge | -           |
-| `asus_openvpn_client_status`     | OpenVPN client status     | Gauge | `client_id` |
-| `asus_openvpn_server_status`     | OpenVPN server status     | Gauge | `server_id` |
-
-### Connection Metrics
-| Metric Name               | Description                | Type  |
-| ------------------------- | -------------------------- | ----- |
-| `asus_connections_total`  | Total network connections  | Gauge |
-| `asus_connections_active` | Active network connections | Gauge |
+| `asus_speedtest_download_mbps`   | Speedtest download speed  | Gauge | -           |
+| `asus_speedtest_upload_mbps`     | Speedtest upload speed    | Gauge | -           |
+| `asus_speedtest_ping_ms`         | Speedtest ping latency    | Gauge | -           |
 
 ### Collection Metrics
 | Metric Name                              | Description                | Type      | Labels       |
@@ -206,6 +292,9 @@ The exporter will be available at: http://localhost:8000/metrics
 | `asus_collection_duration_seconds`       | Collection time histogram  | Histogram | -            |
 | `asus_collection_errors_total`           | Total collection errors    | Counter   | `error_type` |
 | `asus_last_collection_timestamp_seconds` | Last successful collection | Gauge     | -            |
+| `asus_collector_status`                  | Individual collector status | Gauge   | `collector`  |
+
+*Note: This is a subset of 200+ available metrics. Visit `/info` endpoint for complete list.*
 
 ## 🔧 Configuration
 
@@ -220,12 +309,23 @@ The exporter will be available at: http://localhost:8000/metrics
 | `EXPORTER_PORT`                | `8000`        | Exporter port                           |
 | `EXPORTER_LOG_LEVEL`           | `INFO`        | Log level (DEBUG, INFO, WARNING, ERROR) |
 | `EXPORTER_COLLECTION_INTERVAL` | `15`          | Collection interval in seconds          |
+| `EXPORTER_CACHE_TIME`          | `5`           | Data cache time in seconds              |
 | `PROMETHEUS_PORT`              | `9090`        | Prometheus port                         |
 | `PROMETHEUS_RETENTION_TIME`    | `15d`         | Data retention period                   |
+| `PROMETHEUS_SCRAPE_INTERVAL`   | `30s`         | Scrape interval for metrics             |
 | `GRAFANA_PORT`                 | `3000`        | Grafana port                            |
 | `GRAFANA_ADMIN_USER`           | `admin`       | Grafana admin username                  |
 | `GRAFANA_ADMIN_PASSWORD`       | `admin`       | Grafana admin password                  |
 | `TZ`                           | `UTC`         | Timezone                                |
+
+### Endpoints
+
+| Endpoint      | Description                       |
+| ------------- | --------------------------------- |
+| `/metrics`    | Prometheus metrics endpoint       |
+| `/health`     | Health check endpoint             |
+| `/info`       | Exporter information and features |
+| `/collectors` | Detailed collector status         |
 
 ### Customizing Collection Interval
 
@@ -265,10 +365,23 @@ The included dashboard provides:
    
    # Test web interface
    curl -u admin:password http://192.168.1.1
+   
+   # Check exporter health
+   curl http://localhost:8000/health
    ```
 
-2. **Verify exporter logs**:
+2. **Verify exporter status**:
    ```bash
+   # Check overall health
+   curl http://localhost:8000/health
+   
+   # View exporter information
+   curl http://localhost:8000/info
+   
+   # Check collector status
+   curl http://localhost:8000/collectors
+   
+   # View logs
    docker-compose logs asus-exporter
    ```
 
@@ -294,12 +407,19 @@ docker-compose restart asus-exporter
 1. **No metrics in Grafana**:
    - Check Prometheus targets: http://localhost:9090/targets
    - Verify exporter health: http://localhost:8000/health
+   - Check exporter info: http://localhost:8000/info
    - Check Grafana datasource configuration
 
 2. **Missing specific metrics**:
+   - Check collector status: http://localhost:8000/collectors
    - Some metrics depend on router model and firmware
    - Check exporter logs for unsupported features
    - Verify router permissions and API access
+
+3. **Individual collector failures**:
+   - Check `/collectors` endpoint for specific errors
+   - Review logs with `EXPORTER_LOG_LEVEL=DEBUG`
+   - Collectors operate independently - others continue working
 
 ### Performance Tuning
 
