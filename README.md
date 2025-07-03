@@ -497,6 +497,24 @@ echo '{
 sudo systemctl restart docker
 ```
 
+## 📋 Changelog
+
+### v2.0.1 (Latest) - Dashboard Improvements
+- **🔧 Fixed CPU Usage Collection**: Improved parsing for different CPU data formats
+- **📊 Enhanced Dashboard**: New comprehensive Grafana dashboard with better organization
+- **🔌 Fixed Port Visualization**: Proper table displays for port status and link speeds  
+- **🌊 Corrected Network Metrics**: Fixed counter metrics for accurate traffic graphs
+- **🧹 Cleaned Up Legacy**: Removed old dashboard files and unused configurations
+- **📡 Enhanced Client Tracking**: Better WiFi client metrics and connection classification
+
+### v2.0.0 - Major Refactor
+- **🏗️ Modular Architecture**: Split into 7 specialized collectors
+- **📈 100% Metric Coverage**: All 34 AsusData types supported
+- **🐳 Docker Enhancement**: Multi-stage builds, health checks, volume optimization
+- **🔧 Developer Tools**: Makefile, setup.py, comprehensive build system
+- **📚 Complete Documentation**: New README, examples, troubleshooting guides
+- **🎯 Production Ready**: Error handling, logging, configuration management
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines:

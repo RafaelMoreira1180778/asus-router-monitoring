@@ -59,10 +59,30 @@ class SystemCollector(BaseCollector):
     async def _collect_cpu_metrics(self, metrics: Dict[str, Any]):
         """Collect CPU metrics"""
         cpu_data = await self.router.async_get_data(AsusData.CPU)
-        if cpu_data and "usage" in cpu_data:
-            CPU_USAGE.set(float(cpu_data["usage"]))
-            metrics["cpu_usage"] = cpu_data["usage"]
-            self.logger.debug(f"CPU usage: {cpu_data['usage']}%")
+        if cpu_data:
+            self.logger.debug(f"CPU data structure: {cpu_data}")
+
+            # Handle different possible CPU data structures
+            cpu_usage = None
+            if isinstance(cpu_data, dict):
+                cpu_usage = (
+                    cpu_data.get("usage")
+                    or cpu_data.get("cpu_usage")
+                    or cpu_data.get("percent")
+                )
+            elif isinstance(cpu_data, (int, float)):
+                cpu_usage = cpu_data
+
+            if cpu_usage is not None:
+                try:
+                    cpu_value = float(cpu_usage)
+                    CPU_USAGE.set(cpu_value)
+                    metrics["cpu_usage"] = cpu_value
+                    self.logger.debug(f"CPU usage: {cpu_value}%")
+                except (ValueError, TypeError) as e:
+                    self.logger.error(f"Error parsing CPU usage: {e}")
+            else:
+                self.logger.warning(f"No CPU usage found in data: {cpu_data}")
 
     async def _collect_memory_metrics(self, metrics: Dict[str, Any]):
         """Collect RAM and memory metrics"""

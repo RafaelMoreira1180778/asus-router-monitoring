@@ -144,6 +144,22 @@ docker run -e ASUS_PASSWORD=your_password asus-exporter
 
 ## 🎯 Next Steps (Optional)
 
+### **Recent Dashboard Fixes (Latest Update)**
+✅ **Fixed CPU Usage Collection** - Improved CPU metric parsing to handle different data formats
+✅ **Fixed Counter Metrics** - Corrected WAN and interface byte counters for proper Prometheus usage  
+✅ **Enhanced Port Visualization** - Created proper table views for port status and link speeds
+✅ **New Comprehensive Dashboard** - Replaced old dashboard with modern, organized layout
+✅ **Removed Legacy Files** - Cleaned up old dashboard files and unused configuration
+✅ **Improved Client Metrics** - Enhanced WiFi client tracking and connection type classification
+
+### **Dashboard Features**
+- **Status Overview**: Connection status, CPU, RAM, temperature at-a-glance
+- **Network Traffic**: Real-time interface and WAN traffic graphs  
+- **Port Management**: Table views for port status and link speeds
+- **WiFi Monitoring**: Client distribution and band-specific metrics
+- **System Resources**: Load average and temperature monitoring
+- **Auto-refresh**: 30-second refresh for real-time monitoring
+
 1. **Add unit tests** for individual collectors
 2. **Implement CI/CD pipeline** for automated testing
 3. **Add more advanced metrics** as needed

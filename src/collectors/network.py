@@ -49,10 +49,12 @@ class NetworkCollector(BaseCollector):
         wan_data = await self.router.async_get_data(AsusData.WAN)
         if wan_data:
             if "rx_bytes" in wan_data:
-                WAN_RX_BYTES._value._value = float(wan_data["rx_bytes"])
+                # Set counter to current value (not increment)
+                WAN_RX_BYTES._value.set(float(wan_data["rx_bytes"]))
                 metrics["wan_rx_bytes"] = wan_data["rx_bytes"]
             if "tx_bytes" in wan_data:
-                WAN_TX_BYTES._value._value = float(wan_data["tx_bytes"])
+                # Set counter to current value (not increment)
+                WAN_TX_BYTES._value.set(float(wan_data["tx_bytes"]))
                 metrics["wan_tx_bytes"] = wan_data["tx_bytes"]
             if "rx_rate" in wan_data:
                 WAN_RX_RATE.set(float(wan_data["rx_rate"]))
@@ -93,12 +95,13 @@ class NetworkCollector(BaseCollector):
             for interface, stats in network_data.items():
                 if isinstance(stats, dict) and "rx" in stats and "tx" in stats:
                     interface_name = str(interface)
-                    INTERFACE_RX_BYTES.labels(
-                        interface=interface_name
-                    )._value._value = float(stats["rx"])
-                    INTERFACE_TX_BYTES.labels(
-                        interface=interface_name
-                    )._value._value = float(stats["tx"])
+                    # Set counter to current value (not increment)
+                    INTERFACE_RX_BYTES.labels(interface=interface_name)._value.set(
+                        float(stats["rx"])
+                    )
+                    INTERFACE_TX_BYTES.labels(interface=interface_name)._value.set(
+                        float(stats["tx"])
+                    )
 
                     metrics[f"interface_{interface_name}_rx"] = stats["rx"]
                     metrics[f"interface_{interface_name}_tx"] = stats["tx"]
