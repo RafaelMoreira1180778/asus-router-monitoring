@@ -1,0 +1,74 @@
+# Ruff configuration for ASUS Router Monitoring Project
+# This file extends and overrides settings from pyproject.toml if needed
+
+# Exclude common directories
+exclude = [
+    ".direnv",
+    ".git",
+    ".ruff_cache",
+    ".venv",
+    ".vscode",
+]
+
+# Code style settings
+line-length = 100
+indent-width = 4
+target-version = "py312"
+
+# Linter configuration
+[lint]
+# Comprehensive rule selection for high code quality
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+    "RUF",    # Ruff-specific rules
+    "B",      # flake8-bugbear (safer defaults)
+    "A",      # flake8-builtins
+    "C90",    # McCabe complexity
+]
+
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "C901",   # function is too complex (adjust threshold if needed)
+]
+
+# Allow fixes for all enabled rules
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Per-file ignores for specific patterns
+[lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]  # unused imports and wildcard imports
+"**/tests/**" = ["F401", "F403", "F841"]  # allow unused in tests
+
+# Configure complexity checks
+[lint.mccabe]
+max-complexity = 10  # Adjust based on project needs
+
+# Formatter configuration
+[format]
+# String formatting
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# Allow formatting of code in docstrings
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
+
+# isort configuration (import sorting)
+[lint.isort]
+known-first-party = ["src"]
+known-third-party = ["asusrouter", "prometheus_client", "aiohttp"]
+order-by-type = true
+case-sensitive = false

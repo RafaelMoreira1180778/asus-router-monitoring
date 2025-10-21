@@ -1,0 +1,400 @@
+# HELP python_gc_objects_collected_total Objects collected during gc
+# TYPE python_gc_objects_collected_total counter
+python_gc_objects_collected_total{generation="0"} 1368.0
+python_gc_objects_collected_total{generation="1"} 155.0
+python_gc_objects_collected_total{generation="2"} 29.0
+# HELP python_gc_objects_uncollectable_total Uncollectable objects found during GC
+# TYPE python_gc_objects_uncollectable_total counter
+python_gc_objects_uncollectable_total{generation="0"} 0.0
+python_gc_objects_uncollectable_total{generation="1"} 0.0
+python_gc_objects_uncollectable_total{generation="2"} 0.0
+# HELP python_gc_collections_total Number of times this generation was collected
+# TYPE python_gc_collections_total counter
+python_gc_collections_total{generation="0"} 147.0
+python_gc_collections_total{generation="1"} 13.0
+python_gc_collections_total{generation="2"} 1.0
+# HELP python_info Python platform information
+# TYPE python_info gauge
+python_info{implementation="CPython",major="3",minor="12",patchlevel="12",version="3.12.12"} 1.0
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 2.10997248e+08
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 3.4275328e+07
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.76107082068e+09
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 21.66
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 10.0
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 20480.0
+# HELP asus_collection_duration_seconds Time spent collecting metrics from router
+# TYPE asus_collection_duration_seconds histogram
+asus_collection_duration_seconds_bucket{le="0.005"} 190.0
+asus_collection_duration_seconds_bucket{le="0.01"} 190.0
+asus_collection_duration_seconds_bucket{le="0.025"} 190.0
+asus_collection_duration_seconds_bucket{le="0.05"} 190.0
+asus_collection_duration_seconds_bucket{le="0.075"} 190.0
+asus_collection_duration_seconds_bucket{le="0.1"} 190.0
+asus_collection_duration_seconds_bucket{le="0.25"} 190.0
+asus_collection_duration_seconds_bucket{le="0.5"} 190.0
+asus_collection_duration_seconds_bucket{le="0.75"} 190.0
+asus_collection_duration_seconds_bucket{le="1.0"} 190.0
+asus_collection_duration_seconds_bucket{le="2.5"} 190.0
+asus_collection_duration_seconds_bucket{le="5.0"} 190.0
+asus_collection_duration_seconds_bucket{le="7.5"} 190.0
+asus_collection_duration_seconds_bucket{le="10.0"} 190.0
+asus_collection_duration_seconds_bucket{le="+Inf"} 190.0
+asus_collection_duration_seconds_count 190.0
+asus_collection_duration_seconds_sum 0.001997300999391882
+# HELP asus_collection_duration_seconds_created Time spent collecting metrics from router
+# TYPE asus_collection_duration_seconds_created gauge
+asus_collection_duration_seconds_created 1.761070821371401e+09
+# HELP asus_cpu_usage_percent CPU usage percentage
+# TYPE asus_cpu_usage_percent gauge
+asus_cpu_usage_percent 0.0
+# HELP asus_load_average System load average
+# TYPE asus_load_average gauge
+asus_load_average{period="1m"} 2.18
+asus_load_average{period="5m"} 2.1
+asus_load_average{period="15m"} 2.04
+# HELP asus_ram_used_bytes RAM used in bytes
+# TYPE asus_ram_used_bytes gauge
+asus_ram_used_bytes 486916.0
+# HELP asus_ram_free_bytes RAM free in bytes
+# TYPE asus_ram_free_bytes gauge
+asus_ram_free_bytes 561660.0
+# HELP asus_ram_total_bytes RAM total in bytes
+# TYPE asus_ram_total_bytes gauge
+asus_ram_total_bytes 1.048576e+06
+# HELP asus_ram_usage_percent RAM usage percentage
+# TYPE asus_ram_usage_percent gauge
+asus_ram_usage_percent 46.44
+# HELP asus_ram_buffers_bytes RAM buffers in bytes
+# TYPE asus_ram_buffers_bytes gauge
+asus_ram_buffers_bytes 0.0
+# HELP asus_ram_cache_bytes RAM cache in bytes
+# TYPE asus_ram_cache_bytes gauge
+asus_ram_cache_bytes 28.94
+# HELP asus_ram_swap1_bytes RAM swap1 in bytes
+# TYPE asus_ram_swap1_bytes gauge
+asus_ram_swap1_bytes 0.0
+# HELP asus_ram_swap2_bytes RAM swap2 in bytes
+# TYPE asus_ram_swap2_bytes gauge
+asus_ram_swap2_bytes 0.0
+# HELP asus_nvram_used_bytes NVRAM used in bytes
+# TYPE asus_nvram_used_bytes gauge
+asus_nvram_used_bytes 72578.0
+# HELP asus_jffs_free_megabytes JFFS free space in MB
+# TYPE asus_jffs_free_megabytes gauge
+asus_jffs_free_megabytes 61.11
+# HELP asus_jffs_used_megabytes JFFS used space in MB
+# TYPE asus_jffs_used_megabytes gauge
+asus_jffs_used_megabytes 0.0
+# HELP asus_jffs_total_megabytes JFFS total space in MB
+# TYPE asus_jffs_total_megabytes gauge
+asus_jffs_total_megabytes 0.0
+# HELP asus_wan_rx_bytes_total WAN RX bytes total
+# TYPE asus_wan_rx_bytes_total counter
+asus_wan_rx_bytes_total 0.0
+# HELP asus_wan_rx_bytes_created WAN RX bytes total
+# TYPE asus_wan_rx_bytes_created gauge
+asus_wan_rx_bytes_created 1.761070821371529e+09
+# HELP asus_wan_tx_bytes_total WAN TX bytes total
+# TYPE asus_wan_tx_bytes_total counter
+asus_wan_tx_bytes_total 0.0
+# HELP asus_wan_tx_bytes_created WAN TX bytes total
+# TYPE asus_wan_tx_bytes_created gauge
+asus_wan_tx_bytes_created 1.7610708213715348e+09
+# HELP asus_wan_rx_rate_bytes_per_sec WAN RX rate in bytes per second
+# TYPE asus_wan_rx_rate_bytes_per_sec gauge
+asus_wan_rx_rate_bytes_per_sec 0.0
+# HELP asus_wan_tx_rate_bytes_per_sec WAN TX rate in bytes per second
+# TYPE asus_wan_tx_rate_bytes_per_sec gauge
+asus_wan_tx_rate_bytes_per_sec 0.0
+# HELP asus_wan_status WAN connection status
+# TYPE asus_wan_status gauge
+asus_wan_status 0.0
+# HELP asus_wan_ip_info WAN IP address information
+# TYPE asus_wan_ip_info gauge
+asus_wan_ip_info 1.0
+# HELP asus_wan_dns_info WAN DNS servers information
+# TYPE asus_wan_dns_info gauge
+asus_wan_dns_info 1.0
+# HELP asus_wan_uptime_seconds WAN connection uptime in seconds
+# TYPE asus_wan_uptime_seconds gauge
+asus_wan_uptime_seconds 0.0
+# HELP asus_interface_rx_bytes_total Interface RX bytes total
+# TYPE asus_interface_rx_bytes_total counter
+asus_interface_rx_bytes_total{interface="wan"} 8.389016149e+09
+asus_interface_rx_bytes_total{interface="wired"} 1.67809445e+08
+asus_interface_rx_bytes_total{interface="bridge"} 6.76631713e+08
+asus_interface_rx_bytes_total{interface="2ghz"} 3.658434e+06
+asus_interface_rx_bytes_total{interface="5ghz"} 3.91383716e+08
+asus_interface_rx_bytes_total{interface="usb"} 0.0
+# HELP asus_interface_rx_bytes_created Interface RX bytes total
+# TYPE asus_interface_rx_bytes_created gauge
+asus_interface_rx_bytes_created{interface="wan"} 1.7610708219197035e+09
+asus_interface_rx_bytes_created{interface="wired"} 1.7610708219197404e+09
+asus_interface_rx_bytes_created{interface="bridge"} 1.7610708219197612e+09
+asus_interface_rx_bytes_created{interface="2ghz"} 1.7610708219197793e+09
+asus_interface_rx_bytes_created{interface="5ghz"} 1.7610708219198065e+09
+asus_interface_rx_bytes_created{interface="usb"} 1.7610708219198234e+09
+# HELP asus_interface_tx_bytes_total Interface TX bytes total
+# TYPE asus_interface_tx_bytes_total counter
+asus_interface_tx_bytes_total{interface="wan"} 1.084502396e+09
+asus_interface_tx_bytes_total{interface="wired"} 2.773758229e+09
+asus_interface_tx_bytes_total{interface="bridge"} 5.879427259e+09
+asus_interface_tx_bytes_total{interface="2ghz"} 1.4886024e+07
+asus_interface_tx_bytes_total{interface="5ghz"} 3.675653369e+09
+asus_interface_tx_bytes_total{interface="usb"} 0.0
+# HELP asus_interface_tx_bytes_created Interface TX bytes total
+# TYPE asus_interface_tx_bytes_created gauge
+asus_interface_tx_bytes_created{interface="wan"} 1.7610708219197268e+09
+asus_interface_tx_bytes_created{interface="wired"} 1.76107082191975e+09
+asus_interface_tx_bytes_created{interface="bridge"} 1.7610708219197698e+09
+asus_interface_tx_bytes_created{interface="2ghz"} 1.7610708219197922e+09
+asus_interface_tx_bytes_created{interface="5ghz"} 1.7610708219198143e+09
+asus_interface_tx_bytes_created{interface="usb"} 1.7610708219198318e+09
+# HELP asus_port_status Port status (1=up, 0=down)
+# TYPE asus_port_status gauge
+asus_port_status{port_id="wan",port_type="wan"} 1.0
+asus_port_status{port_id="1",port_type="lan"} 1.0
+asus_port_status{port_id="2",port_type="lan"} 0.0
+asus_port_status{port_id="3",port_type="lan"} 1.0
+asus_port_status{port_id="4",port_type="lan"} 1.0
+asus_port_status{port_id="5",port_type="lan"} 0.0
+asus_port_status{port_id="6",port_type="lan"} 1.0
+asus_port_status{port_id="7",port_type="lan"} 0.0
+asus_port_status{port_id="8",port_type="lan"} 0.0
+asus_port_status{port_id="usb",port_type="usb"} 0.0
+# HELP asus_port_link_rate_mbps Port link rate in Mbps
+# TYPE asus_port_link_rate_mbps gauge
+asus_port_link_rate_mbps{port_id="wan",port_type="wan"} 1000.0
+asus_port_link_rate_mbps{port_id="1",port_type="lan"} 1000.0
+asus_port_link_rate_mbps{port_id="2",port_type="lan"} 0.0
+asus_port_link_rate_mbps{port_id="3",port_type="lan"} 1000.0
+asus_port_link_rate_mbps{port_id="4",port_type="lan"} 1000.0
+asus_port_link_rate_mbps{port_id="5",port_type="lan"} 0.0
+asus_port_link_rate_mbps{port_id="6",port_type="lan"} 100.0
+asus_port_link_rate_mbps{port_id="7",port_type="lan"} 0.0
+asus_port_link_rate_mbps{port_id="8",port_type="lan"} 0.0
+asus_port_link_rate_mbps{port_id="usb",port_type="usb"} 0.0
+# HELP asus_port_max_rate_mbps Port maximum rate in Mbps
+# TYPE asus_port_max_rate_mbps gauge
+asus_port_max_rate_mbps{node_mac="main",port_id="wan",port_type="wan"} 1000.0
+asus_port_max_rate_mbps{node_mac="main",port_id="1",port_type="lan"} 1000.0
+asus_port_max_rate_mbps{node_mac="main",port_id="2",port_type="lan"} 1000.0
+asus_port_max_rate_mbps{node_mac="main",port_id="3",port_type="lan"} 1000.0
+asus_port_max_rate_mbps{node_mac="main",port_id="4",port_type="lan"} 1000.0
+asus_port_max_rate_mbps{node_mac="main",port_id="5",port_type="lan"} 1000.0
+asus_port_max_rate_mbps{node_mac="main",port_id="6",port_type="lan"} 1000.0
+asus_port_max_rate_mbps{node_mac="main",port_id="7",port_type="lan"} 1000.0
+asus_port_max_rate_mbps{node_mac="main",port_id="8",port_type="lan"} 1000.0
+asus_port_max_rate_mbps{node_mac="main",port_id="usb",port_type="usb"} 5000.0
+# HELP asus_port_capabilities Port capabilities
+# TYPE asus_port_capabilities gauge
+asus_port_capabilities{capability="WAN",node_mac="main",port_id="wan",port_type="wan"} 1.0
+asus_port_capabilities{capability="DUALWAN_PRIMARY",node_mac="main",port_id="wan",port_type="wan"} 1.0
+asus_port_capabilities{capability="LAN",node_mac="main",port_id="1",port_type="lan"} 1.0
+asus_port_capabilities{capability="LAN",node_mac="main",port_id="2",port_type="lan"} 1.0
+asus_port_capabilities{capability="LAN",node_mac="main",port_id="3",port_type="lan"} 1.0
+asus_port_capabilities{capability="LAN",node_mac="main",port_id="4",port_type="lan"} 1.0
+asus_port_capabilities{capability="LAN",node_mac="main",port_id="5",port_type="lan"} 1.0
+asus_port_capabilities{capability="LAN",node_mac="main",port_id="6",port_type="lan"} 1.0
+asus_port_capabilities{capability="LAN",node_mac="main",port_id="7",port_type="lan"} 1.0
+asus_port_capabilities{capability="LAN",node_mac="main",port_id="8",port_type="lan"} 1.0
+asus_port_capabilities{capability="USB",node_mac="main",port_id="usb",port_type="usb"} 1.0
+# HELP asus_temperature_celsius Temperature in Celsius
+# TYPE asus_temperature_celsius gauge
+asus_temperature_celsius{sensor="Wlan.FREQ_2G"} 47.0
+asus_temperature_celsius{sensor="Wlan.FREQ_5G"} 46.0
+asus_temperature_celsius{sensor="cpu"} 64.042
+# HELP asus_wifi_clients_total Total number of WiFi clients
+# TYPE asus_wifi_clients_total gauge
+asus_wifi_clients_total 27.0
+# HELP asus_wifi_clients_by_band Number of WiFi clients by band
+# TYPE asus_wifi_clients_by_band gauge
+# HELP asus_wifi_clients_associated WiFi clients associated
+# TYPE asus_wifi_clients_associated gauge
+asus_wifi_clients_associated{band="Wlan.FREQ_2G"} 6.0
+asus_wifi_clients_associated{band="Wlan.FREQ_5G"} 5.0
+asus_wifi_clients_associated{band="Wlan.FREQ_5G2"} 0.0
+asus_wifi_clients_associated{band="Wlan.FREQ_6G"} 0.0
+# HELP asus_wifi_clients_authorized WiFi clients authorized
+# TYPE asus_wifi_clients_authorized gauge
+asus_wifi_clients_authorized{band="Wlan.FREQ_2G"} 5.0
+asus_wifi_clients_authorized{band="Wlan.FREQ_5G"} 5.0
+asus_wifi_clients_authorized{band="Wlan.FREQ_5G2"} 0.0
+asus_wifi_clients_authorized{band="Wlan.FREQ_6G"} 0.0
+# HELP asus_wifi_clients_authenticated WiFi clients authenticated
+# TYPE asus_wifi_clients_authenticated gauge
+asus_wifi_clients_authenticated{band="Wlan.FREQ_2G"} 6.0
+asus_wifi_clients_authenticated{band="Wlan.FREQ_5G"} 5.0
+asus_wifi_clients_authenticated{band="Wlan.FREQ_5G2"} 0.0
+asus_wifi_clients_authenticated{band="Wlan.FREQ_6G"} 0.0
+# HELP asus_client_count_by_type Number of clients by connection type
+# TYPE asus_client_count_by_type gauge
+asus_client_count_by_type{type="wifi_total"} 0.0
+asus_client_count_by_type{type="wired_total"} 0.0
+asus_client_count_by_type{type="total"} 27.0
+# HELP asus_client_online Client online status
+# TYPE asus_client_online gauge
+# HELP asus_client_rssi_dbm Client RSSI in dBm
+# TYPE asus_client_rssi_dbm gauge
+# HELP asus_client_tx_rate_mbps Client TX rate in Mbps
+# TYPE asus_client_tx_rate_mbps gauge
+# HELP asus_client_rx_rate_mbps Client RX rate in Mbps
+# TYPE asus_client_rx_rate_mbps gauge
+# HELP asus_client_internet_state Client internet access state
+# TYPE asus_client_internet_state gauge
+# HELP asus_connection_status Router connection status (1=connected, 0=disconnected)
+# TYPE asus_connection_status gauge
+asus_connection_status 1.0
+# HELP asus_connections_total Total network connections
+# TYPE asus_connections_total gauge
+asus_connections_total 414.0
+# HELP asus_connections_active Active network connections
+# TYPE asus_connections_active gauge
+asus_connections_active 106.0
+# HELP asus_router_info Router information
+# TYPE asus_router_info gauge
+asus_router_info{brand="ASUSTek",firmware="unknown",hostname="unknown",model="unknown"} 1.0
+# HELP asus_boot_timestamp_seconds Router boot timestamp
+# TYPE asus_boot_timestamp_seconds gauge
+asus_boot_timestamp_seconds 0.0
+# HELP asus_firmware_info Firmware information
+# TYPE asus_firmware_info gauge
+asus_firmware_info{available="None",current="3.0.0.4.388.10_0",state="False"} 1.0
+# HELP asus_firmware_update_available Firmware update available (1=yes, 0=no)
+# TYPE asus_firmware_update_available gauge
+asus_firmware_update_available 0.0
+# HELP asus_firmware_build_info Firmware build information
+# TYPE asus_firmware_build_info gauge
+asus_firmware_build_info 1.0
+# HELP asus_firmware_notes_info Firmware release notes
+# TYPE asus_firmware_notes_info gauge
+asus_firmware_notes_info 1.0
+# HELP asus_openvpn_client_status OpenVPN client status
+# TYPE asus_openvpn_client_status gauge
+asus_openvpn_client_status{client_id="1"} 0.0
+asus_openvpn_client_status{client_id="2"} 0.0
+asus_openvpn_client_status{client_id="3"} 0.0
+asus_openvpn_client_status{client_id="4"} 0.0
+asus_openvpn_client_status{client_id="5"} 0.0
+# HELP asus_openvpn_server_status OpenVPN server status
+# TYPE asus_openvpn_server_status gauge
+asus_openvpn_server_status{server_id="1"} 0.0
+asus_openvpn_server_status{server_id="2"} 0.0
+# HELP asus_wireguard_client_status WireGuard client status
+# TYPE asus_wireguard_client_status gauge
+asus_wireguard_client_status{client_id="1"} -999.0
+asus_wireguard_client_status{client_id="2"} -999.0
+asus_wireguard_client_status{client_id="3"} -999.0
+asus_wireguard_client_status{client_id="4"} -999.0
+asus_wireguard_client_status{client_id="5"} -999.0
+# HELP asus_wireguard_server_status WireGuard server status
+# TYPE asus_wireguard_server_status gauge
+asus_wireguard_server_status{server_id="1"} 0.0
+# HELP asus_vpnc_client_count Number of configured VPN clients
+# TYPE asus_vpnc_client_count gauge
+asus_vpnc_client_count 0.0
+# HELP asus_vpnc_client_uptime_seconds VPN client uptime in seconds
+# TYPE asus_vpnc_client_uptime_seconds gauge
+# HELP asus_vpnc_client_rx_bytes_total VPN client RX bytes total
+# TYPE asus_vpnc_client_rx_bytes_total counter
+# HELP asus_vpnc_client_tx_bytes_total VPN client TX bytes total
+# TYPE asus_vpnc_client_tx_bytes_total counter
+# HELP asus_led_status LED status (1=on, 0=off)
+# TYPE asus_led_status gauge
+asus_led_status 1.0
+# HELP asus_aura_status Aura lighting status
+# TYPE asus_aura_status gauge
+asus_aura_status 0.0
+# HELP asus_speedtest_download_mbps Speedtest download speed in Mbps
+# TYPE asus_speedtest_download_mbps gauge
+asus_speedtest_download_mbps 0.0
+# HELP asus_speedtest_upload_mbps Speedtest upload speed in Mbps
+# TYPE asus_speedtest_upload_mbps gauge
+asus_speedtest_upload_mbps 0.0
+# HELP asus_speedtest_ping_ms Speedtest ping in milliseconds
+# TYPE asus_speedtest_ping_ms gauge
+asus_speedtest_ping_ms 0.0
+# HELP asus_speedtest_timestamp_seconds Speedtest last run timestamp
+# TYPE asus_speedtest_timestamp_seconds gauge
+asus_speedtest_timestamp_seconds 0.0
+# HELP asus_node_status Node status information
+# TYPE asus_node_status gauge
+asus_node_status{attribute="cd_good_to_go",node_mac="3C:7C:3F:DB:89:68"} 1.0
+# HELP asus_aimesh_node_count Number of AiMesh nodes
+# TYPE asus_aimesh_node_count gauge
+asus_aimesh_node_count 0.0
+# HELP asus_aimesh_node_status AiMesh node status
+# TYPE asus_aimesh_node_status gauge
+# HELP asus_dsl_rate_down_kbps DSL download rate in kbps
+# TYPE asus_dsl_rate_down_kbps gauge
+asus_dsl_rate_down_kbps 0.0
+# HELP asus_dsl_rate_up_kbps DSL upload rate in kbps
+# TYPE asus_dsl_rate_up_kbps gauge
+asus_dsl_rate_up_kbps 0.0
+# HELP asus_dsl_snr_down_db DSL downstream SNR in dB
+# TYPE asus_dsl_snr_down_db gauge
+asus_dsl_snr_down_db 0.0
+# HELP asus_dsl_snr_up_db DSL upstream SNR in dB
+# TYPE asus_dsl_snr_up_db gauge
+asus_dsl_snr_up_db 0.0
+# HELP asus_gwlan_status Guest WLAN status
+# TYPE asus_gwlan_status gauge
+# HELP asus_gwlan_client_count Guest WLAN client count
+# TYPE asus_gwlan_client_count gauge
+# HELP asus_wlan_status WLAN status
+# TYPE asus_wlan_status gauge
+# HELP asus_wlan_channel WLAN channel
+# TYPE asus_wlan_channel gauge
+asus_wlan_channel{band="2ghz"} 0.0
+# HELP asus_wlan_txpower_dbm WLAN transmit power in dBm
+# TYPE asus_wlan_txpower_dbm gauge
+# HELP asus_wlan_bandwidth_mhz WLAN bandwidth in MHz
+# TYPE asus_wlan_bandwidth_mhz gauge
+# HELP asus_parental_control_enabled Parental control enabled
+# TYPE asus_parental_control_enabled gauge
+asus_parental_control_enabled 0.0
+# HELP asus_parental_control_rules_count Number of parental control rules
+# TYPE asus_parental_control_rules_count gauge
+asus_parental_control_rules_count 0.0
+# HELP asus_parental_control_blocked_clients Number of blocked clients
+# TYPE asus_parental_control_blocked_clients gauge
+asus_parental_control_blocked_clients 0.0
+# HELP asus_port_forwarding_enabled Port forwarding enabled
+# TYPE asus_port_forwarding_enabled gauge
+asus_port_forwarding_enabled 0.0
+# HELP asus_port_forwarding_rules_count Number of port forwarding rules
+# TYPE asus_port_forwarding_rules_count gauge
+asus_port_forwarding_rules_count 0.0
+# HELP asus_ping_response_time_ms Ping response time in milliseconds
+# TYPE asus_ping_response_time_ms gauge
+# HELP asus_ping_packet_loss_percent Ping packet loss percentage
+# TYPE asus_ping_packet_loss_percent gauge
+# HELP asus_system_flags_info System flags and capabilities
+# TYPE asus_system_flags_info gauge
+asus_system_flags_info 1.0
+# HELP asus_device_map_info Device map information
+# TYPE asus_device_map_info gauge
+asus_device_map_info{dhcp_dnsqmode="None",diag_dblog_enable="None",diag_dblog_remaining="None",qtn_state="None",sim_g3err_pin="None",sim_imsi="None",sim_isp="None",sim_modem_act_provider="None",sim_modem_sim_order="None",sim_operation="None",sim_pin_remaining_count="None",sim_roaming="0",sim_roaming_imsi="None",sim_rx_bytes="None",sim_signal="None",sim_state="None",sim_tx_bytes="None",sys_uptimeStr="Tue, 21 Oct 2025 20:08:59 +0100(26757 secs since boot)",usb_modem_enable="1",usb_status="'[]'",vpn_client1_errno="0",vpn_client1_state="0",vpn_client2_errno="0",vpn_client2_state="0",vpn_client3_errno="0",vpn_client3_state="0",vpn_client4_errno="0",vpn_client4_state="0",vpn_client5_errno="0",vpn_client5_state="0",vpn_server1_state="0",vpn_server2_state="0",vpn_vpnc_proto="disable",vpn_vpnc_sbstate_t="0",vpn_vpnc_state_t="0",vpn_vpnd_state="0",wan0_auxstatus="0",wan0_enable="1",wan0_ipaddr="176.79.89.161",wan0_realip_ip="176.79.89.161",wan0_realip_state="2",wan0_sbstatus="0",wan0_status="2",wan1_auxstatus="0",wan1_enable="1",wan1_ipaddr="0.0.0.0",wan1_realip_ip="None",wan1_realip_state="0",wan1_sbstatus="0",wan1_status="4",wan_active_wan_unit="0",wan_auxstatus="0",wan_data_rate_info_2g="6 Mbps",wan_data_rate_info_5g="433 Mbps",wan_data_rate_info_5g_2="0 Mbps",wan_ddnsRet="None",wan_ddnsUpdate="None",wan_diag_state="None",wan_le_restart_httpd="None",wan_line_state="None",wan_link_internet="2",wan_monoClient="None",wan_rssi_2g="None",wan_rssi_5g="None",wan_rssi_5g_2="None",wan_sbstatus="0",wan_status="2",wan_wifi_hw_switch="1",wan_wlan0_radio_flag="1",wan_wlan1_radio_flag="1",wan_wlan2_radio_flag="None",wan_wlc0_state="None",wan_wlc1_state="None",wan_wlc2_state="None",wan_wlc_sbstate="0",wan_wlc_state="0"} 1.0
+# HELP asus_system_model_info System model information
+# TYPE asus_system_model_info gauge
+asus_system_model_info 1.0
+# HELP asus_system_serial_info System serial information
+# TYPE asus_system_serial_info gauge
+asus_system_serial_info 1.0
+# HELP asus_last_collection_timestamp_seconds Timestamp of last successful collection
+# TYPE asus_last_collection_timestamp_seconds gauge
+asus_last_collection_timestamp_seconds 1.7610737391167557e+09
+# HELP asus_collection_errors_total Total collection errors
+# TYPE asus_collection_errors_total counter

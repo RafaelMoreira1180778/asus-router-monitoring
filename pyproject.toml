@@ -1,0 +1,26 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
+name = "asus-router-monitoring"
+version = "1.0.0"
+description = "High-performance, modular Prometheus exporter for ASUS routers"
+authors = [{name = "Rafael Moreira", email = "rafael@homelabrafael.com"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "asusrouter>=1.21.0",
+    "prometheus-client>=0.19.0",
+    "aiohttp>=3.12.15",
+]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.8.0"]
+
+[project.scripts]
+asus-exporter = "src.main:main"
+
+[tool.poetry]
+packages = [{include = "src"}]

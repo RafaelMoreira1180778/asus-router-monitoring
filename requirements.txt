@@ -1,0 +1,6 @@
+# ASUS Router Prometheus Exporter v1.0 Requirements
+# Python 3.12 required
+# Install with: uv pip install -r requirements.txt
+asusrouter>=1.21.0
+prometheus_client>=0.19.0
+aiohttp>=3.12.15
