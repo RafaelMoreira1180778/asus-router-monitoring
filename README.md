@@ -15,10 +15,12 @@ A beautiful Prometheus + Grafana monitoring stack for ASUS routers. Get deep ins
 ## 🚀 What You Get
 
 **System Monitoring**: CPU, RAM, load average, boot time, connection status  
-**Network Stats**: WAN/LAN traffic, interface statistics, DNS info  
+**Network Stats**: WAN/LAN traffic, interface statistics, DNS info, connection tracking  
 **WiFi Analytics**: Client tracking, RSSI, TX/RX rates, band analysis  
 **Hardware Health**: Port monitoring, temperature sensors, link speeds  
 **VPN Status**: OpenVPN, WireGuard, VPNC monitoring  
+**Device Inventory**: Complete device list with MAC, IP, connection type (wired/wireless)  
+**Connection Analytics**: Total and active connections over time  
 **Services**: LED, Aura lighting, speedtest, firmware updates, and more
 
 All wrapped in a beautiful Grafana dashboard with real-time updates.

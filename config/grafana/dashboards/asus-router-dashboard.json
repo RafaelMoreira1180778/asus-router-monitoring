@@ -62,7 +62,7 @@
             },
             "gridPos": {
                 "h": 8,
-                "w": 6,
+                "w": 4,
                 "x": 0,
                 "y": 1
             },
@@ -118,8 +118,8 @@
             },
             "gridPos": {
                 "h": 8,
-                "w": 6,
-                "x": 6,
+                "w": 4,
+                "x": 4,
                 "y": 1
             },
             "id": 3,
@@ -174,8 +174,8 @@
             },
             "gridPos": {
                 "h": 8,
-                "w": 6,
-                "x": 12,
+                "w": 4,
+                "x": 8,
                 "y": 1
             },
             "id": 4,
@@ -234,8 +234,8 @@
             },
             "gridPos": {
                 "h": 8,
-                "w": 6,
-                "x": 18,
+                "w": 4,
+                "x": 12,
                 "y": 1
             },
             "id": 5,
@@ -262,6 +262,108 @@
                 }
             ],
             "title": "CPU Temperature",
+            "type": "stat"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 4,
+                "x": 16,
+                "y": 1
+            },
+            "id": 21,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "value_and_name"
+            },
+            "pluginVersion": "8.0.0",
+            "targets": [
+                {
+                    "expr": "count(asus_device_online == 1)",
+                    "legendFormat": "Online Devices",
+                    "refId": "A"
+                }
+            ],
+            "title": "Online Devices Count",
+            "type": "stat"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 4,
+                "x": 20,
+                "y": 1
+            },
+            "id": 23,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "value_and_name"
+            },
+            "pluginVersion": "8.0.0",
+            "targets": [
+                {
+                    "expr": "asus_connections_active",
+                    "legendFormat": "Active Connections",
+                    "refId": "A"
+                }
+            ],
+            "title": "Current Active Connections",
             "type": "stat"
         },
         {
@@ -1006,6 +1108,315 @@
             ],
             "title": "Temperature Monitoring",
             "type": "timeseries"
+        },
+        {
+            "collapsed": false,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 45
+            },
+            "id": 18,
+            "panels": [],
+            "title": "Device Inventory & Connections",
+            "type": "row"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "tooltip": false,
+                            "viz": false,
+                            "legend": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineWidth": 2,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "short"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 46
+            },
+            "id": 19,
+            "options": {
+                "legend": {
+                    "calcs": [
+                        "lastNotNull",
+                        "max"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "asus_connections_total",
+                    "legendFormat": "Total Connections",
+                    "refId": "A"
+                },
+                {
+                    "expr": "asus_connections_active",
+                    "legendFormat": "Active Connections",
+                    "refId": "B"
+                }
+            ],
+            "title": "Network Connections Over Time",
+            "type": "timeseries"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "inspect": false
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Online"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "mappings",
+                                "value": [
+                                    {
+                                        "options": {
+                                            "0": {
+                                                "text": "Offline",
+                                                "color": "red"
+                                            },
+                                            "1": {
+                                                "text": "Online",
+                                                "color": "green"
+                                            }
+                                        },
+                                        "type": "value"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Connection Type"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background"
+                            },
+                            {
+                                "id": "mappings",
+                                "value": [
+                                    {
+                                        "options": {
+                                            "wired": {
+                                                "text": "Wired",
+                                                "color": "blue"
+                                            },
+                                            "wifi_2.4ghz": {
+                                                "text": "WiFi 2.4GHz",
+                                                "color": "purple"
+                                            },
+                                            "wifi_5ghz": {
+                                                "text": "WiFi 5GHz",
+                                                "color": "orange"
+                                            },
+                                            "wifi_6ghz": {
+                                                "text": "WiFi 6GHz",
+                                                "color": "yellow"
+                                            }
+                                        },
+                                        "type": "value"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 46
+            },
+            "id": 20,
+            "options": {
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": true,
+                        "displayName": "Online"
+                    }
+                ]
+            },
+            "pluginVersion": "8.0.0",
+            "targets": [
+                {
+                    "expr": "asus_device_online",
+                    "format": "table",
+                    "instant": true,
+                    "refId": "A"
+                }
+            ],
+            "title": "Connected Devices Inventory",
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true,
+                            "__name__": true,
+                            "instance": true,
+                            "job": true
+                        },
+                        "indexByName": {
+                            "name": 0,
+                            "mac": 1,
+                            "ip": 2,
+                            "connection_type": 3,
+                            "Value": 4
+                        },
+                        "renameByName": {
+                            "name": "Device Name",
+                            "mac": "MAC Address",
+                            "ip": "IP Address",
+                            "connection_type": "Connection Type",
+                            "Value": "Online"
+                        }
+                    }
+                }
+            ],
+            "type": "table"
+        },
+        {
+            "datasource": "Prometheus",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "hideFrom": {
+                            "tooltip": false,
+                            "viz": false,
+                            "legend": false
+                        }
+                    },
+                    "mappings": []
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 6,
+                "y": 54
+            },
+            "id": 22,
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "values": [
+                        "value"
+                    ]
+                },
+                "pieType": "donut",
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "expr": "count(asus_device_online{connection_type=\"wired\"} == 1)",
+                    "legendFormat": "Wired",
+                    "refId": "A"
+                },
+                {
+                    "expr": "count(asus_device_online{connection_type=\"wifi_2.4ghz\"} == 1)",
+                    "legendFormat": "WiFi 2.4GHz",
+                    "refId": "B"
+                },
+                {
+                    "expr": "count(asus_device_online{connection_type=\"wifi_5ghz\"} == 1)",
+                    "legendFormat": "WiFi 5GHz",
+                    "refId": "C"
+                },
+                {
+                    "expr": "count(asus_device_online{connection_type=\"wifi_6ghz\"} == 1)",
+                    "legendFormat": "WiFi 6GHz",
+                    "refId": "D"
+                }
+            ],
+            "title": "Devices by Connection Type",
+            "type": "piechart"
         }
     ],
     "refresh": "30s",

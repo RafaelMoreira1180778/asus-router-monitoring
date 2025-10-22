@@ -13,6 +13,7 @@ from ..metrics.prometheus_metrics import (
     collection_time,
 )
 from .base import BaseCollector
+from .devices import DeviceInventoryCollector
 from .firmware import FirmwareCollector
 from .hardware import HardwareCollector
 from .network import NetworkCollector
@@ -37,6 +38,7 @@ class MetricsCollectorManager:
             FirmwareCollector(router),
             VPNCollector(router),
             ServicesCollector(router),
+            DeviceInventoryCollector(router),
         ]
         self.is_connected = False
         self.logger = logging.getLogger(self.__class__.__name__)

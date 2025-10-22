@@ -106,6 +106,17 @@ CONNECTION_STATUS = Gauge(
 TOTAL_CONNECTIONS = Gauge("asus_connections_total", "Total network connections")
 ACTIVE_CONNECTIONS = Gauge("asus_connections_active", "Active network connections")
 
+# Device inventory metrics
+DEVICE_INFO = Info("asus_device", "Device information", ["mac", "name", "ip"])
+DEVICE_ONLINE = Gauge(
+    "asus_device_online",
+    "Device online status",
+    ["mac", "name", "ip", "connection_type"],
+)
+DEVICE_CONNECTION_INFO = Info(
+    "asus_device_connection", "Device connection details", ["mac", "name", "ip"]
+)
+
 # System info
 ROUTER_INFO = Info("asus_router", "Router information")
 BOOTTIME = Gauge("asus_boot_timestamp_seconds", "Router boot timestamp")
